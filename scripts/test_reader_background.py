@@ -5,6 +5,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
+import shlex
 import signal
 import socket
 import subprocess
@@ -148,6 +149,24 @@ def session(port=None):
 
 
 class SupervisorIntegration(unittest.TestCase):
+    def test_project_importer_interpreter_is_used_for_reader(self):
+        with session() as value:
+            value.populate()
+            environment = value.root / '.venv'
+            binary = environment / 'bin/python'
+            binary.parent.mkdir(parents=True)
+            (environment / 'pyvenv.cfg').write_text('home = synthetic fixture\n')
+            marker = value.runtime / 'selected-project-environment'
+            wrapper = ('import os,sys\nfrom pathlib import Path\n'
+                       + 'Path(' + repr(str(marker)) + ').write_text("selected")\n'
+                       + 'os.execv(sys.executable,[sys.executable,*sys.argv[1:]])\n')
+            binary.write_text('#!/bin/sh\nexec ' + shlex.quote(sys.executable)
+                              + ' -c ' + shlex.quote(wrapper) + ' "$@"\n')
+            binary.chmod(0o755)
+            value.start()
+            value.running()
+            self.assertEqual('selected', marker.read_text())
+
     def test_missing_disk_waits_then_starts_and_recovers_after_content_returns(self):
         with session() as value:
             value.start()

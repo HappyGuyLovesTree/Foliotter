@@ -7,6 +7,7 @@
 !/SECURITY.md
 !/CONTRIBUTING.md
 !/VERSION
+!/requirements-import.txt
 !/.gitignore
 !/安装桌面入口.command
 !/启动阅读.command
@@ -36,6 +37,9 @@
 !/app/library.html
 !/app/library.js
 !/app/library.css
+!/app/i18n.js
+!/app/reading-language.js
+!/app/reader-notices.js
 !/packaging/
 /packaging/*
 !/packaging/redbook.svg
@@ -60,6 +64,16 @@
 !/scripts/test_audit_release.py
 !/scripts/test_install_background.py
 !/scripts/test_reader_import.cjs
+!/scripts/runtime.py
+!/scripts/setup_importers.py
+!/scripts/test_runtime.py
+!/scripts/book_import.py
+!/scripts/import_worker.py
+!/scripts/import_messages.py
+!/scripts/test_book_import.py
+!/scripts/test_i18n.cjs
+!/scripts/test_reading_language.cjs
+!/scripts/test_record_notices.cjs
 
 # Defense in depth; never remove these for an ebook import.
 /user-library/
@@ -71,6 +85,7 @@
 /evidence/
 /dist/
 /docs/
+/.venv/
 __pycache__/
 *.pyc
 .DS_Store

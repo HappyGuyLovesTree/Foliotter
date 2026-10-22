@@ -1,0 +1,7 @@
+# PDF parsing: BSD-3-Clause. Installed only in the project's isolated venv.
+pypdf==6.21.2
+# KindleUnpack fork, invoked as a standalone GPL-3.0-only CLI (mobiunpack).
+mobi==0.4.1
+# Converter dependencies: MIT and PSF-2.0 respectively.
+loguru==0.7.3
+standard-imghdr==3.13.0

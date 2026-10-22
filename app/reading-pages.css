@@ -20,10 +20,10 @@ html,body {height:100%;overflow:hidden;}
 .imported-book .book-rail .title-zh {font-size:34px;line-height:1.4;overflow-wrap:anywhere;}
 .imported-book .book-rail .title-en {font-size:16px;}
 .imported-book .book-author {letter-spacing:0;line-height:1.7;overflow-wrap:anywhere;}
-.imported-book .bilingual.single-language {grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);width:min(100%,900px);align-self:center;}
-.imported-book .single-language .language-column {max-width:none;}
-.imported-book .single-language .book-text {max-width:none;}
-.imported-book .book-rail .language-controls>label,.imported-book .book-rail .language-controls>#language-select {display:none;}
+.bilingual.single-language {grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr);width:min(100%,900px);align-self:center;}
+.single-language .language-column {max-width:none;}
+.single-language .book-text {max-width:none;}
+
 .imported-book .book-search:has(select[hidden]) {grid-template-columns:minmax(0,1fr);}
 .load-state .small-button {display:inline-flex;align-items:center;margin-right:12px;text-decoration:none;}
 #reader {flex:1;min-height:0;display:flex;flex-direction:column;}
@@ -153,3 +153,16 @@ html:has(body.context-reading) {height:auto;overflow:auto;}
   .context-reading .bilingual {display:block;}
   .context-reading .language-column+.language-column {margin-top:24px;}
 }
+
+/* Language choices are explicit, independent of interface locale. */
+.reader-language-settings {display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:8px 0;border-bottom:1px solid var(--rule);font:12px/1.4 var(--ui);color:var(--muted);}
+.reader-language-settings label {display:flex;align-items:center;gap:8px;}
+.reader-language-settings select {min-height:36px;background:transparent;padding:4px 24px 4px 8px;color:var(--ink);}
+.reader-language-settings .language-controls {display:flex;margin:0;padding:0;border:0;}
+.reader-language-settings select:disabled {opacity:.7;}
+.ui-language-setting {display:flex;align-items:center;gap:8px;font:11px var(--ui);}
+.ui-language-setting select {min-height:36px;background:transparent;max-width:95px;padding:4px;}
+.context-row-columns.single-language {grid-template-columns:minmax(0,1fr);}
+.bilingual.single-language {width:min(100%,1100px);grid-template-rows:minmax(0,1fr);}
+.language-column[hidden] {display:none!important;}
+@media(max-width:600px){.reader-language-settings {gap:8px 16px;padding:4px 0;font-size:11px;}.reader-language-settings label {gap:5px;}.ui-language-setting>span {display:none;}.ui-language-setting select {max-width:76px;}.reading-top {flex-wrap:wrap;}.workspace-brand {font-size:20px;}.bilingual.single-language {grid-template-rows:minmax(0,1fr);}}

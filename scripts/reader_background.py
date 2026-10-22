@@ -33,7 +33,7 @@ def files_ready(root):
 
 def signature(root):
     result = []
-    for name in ('VERSION', 'scripts/serve.py', 'scripts/epub_import.py', 'scripts/interpretations.py', 'scripts/interpretation_model.py'):
+    for name in ('VERSION', 'scripts/serve.py', 'scripts/epub_import.py', 'scripts/book_import.py', 'scripts/import_worker.py', 'scripts/import_messages.py', 'scripts/runtime.py', '.venv/pyvenv.cfg', 'scripts/interpretations.py', 'scripts/interpretation_model.py'):
         path = root / name
         try:
             info = path.stat()
@@ -141,7 +141,11 @@ def supervise(config, runtime, interval=3):
             else:
                 try:
                     active_signature = signature(root)
-                    child = subprocess.Popen([config['python'], '-B', str(root / 'scripts/serve.py'), '--port', str(port)], cwd=root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace', env={**os.environ, 'PYTHONUNBUFFERED': '1'})
+                    # The copied supervisor must also work when the external disk
+                    # is absent. Select its project environment only after files_ready.
+                    project_interpreter = root / '.venv' / ('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+                    python = str(project_interpreter) if (root / '.venv/pyvenv.cfg').is_file() and project_interpreter.is_file() else config['python']
+                    child = subprocess.Popen([python, '-B', str(root / 'scripts/serve.py'), '--port', str(port)], cwd=root, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, encoding='utf-8', errors='replace', env={**os.environ, 'PYTHONUNBUFFERED': '1'})
                     threading.Thread(target=collect_output, args=(child,), daemon=True).start()
                     failures = 0
                     pending = None
@@ -171,9 +175,9 @@ def open_reader(config, runtime):
             return subprocess.run(['/usr/bin/open', url]).returncode
         time.sleep(.4)
     missing = not files_ready(Path(config['project']))
-    message = '应用目录暂不可用。请确认保存应用的磁盘已连接，再打开 Foliotter。' if missing else '本地服务尚未准备好。请稍后再打开 Foliotter；若持续无法打开，可查看本地服务日志。'
+    message = 'The application folder is unavailable. Connect its disk and open Foliotter again.' if missing else 'The local reader is not ready yet. Try opening Foliotter again shortly. If this continues, check the local service log.'
     page = runtime / 'open-foliotter.html'
-    page.write_text('<!doctype html><meta charset="utf-8"><title>Foliotter · 书獭</title><style>body{background:#f5efe3;color:#25221e;font:20px/1.8 system-ui;max-width:38em;margin:12vh auto;padding:24px}a{color:#a32b22}</style><h1>Foliotter · 书獭</h1><p>' + html.escape(message) + '</p><p><a href="' + url + '">重新打开阅读页面</a></p>', encoding='utf-8')
+    page.write_text('<!doctype html><html lang="en"><meta charset="utf-8"><title>Foliotter</title><style>body{background:#f5efe3;color:#25221e;font:20px/1.8 system-ui;max-width:38em;margin:12vh auto;padding:24px}a{color:#a32b22}</style><h1>Foliotter</h1><p>' + html.escape(message) + '</p><p><a href="' + url + '">Open the reader again</a></p>', encoding='utf-8')
     subprocess.run(['/usr/bin/open', str(page)])
     return 1
 

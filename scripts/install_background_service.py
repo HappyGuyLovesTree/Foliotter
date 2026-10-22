@@ -3,10 +3,31 @@
 import json
 from pathlib import Path
 import plistlib
+import re
 import sys
 import shlex
 import argparse
 import subprocess
+
+
+def stable_python_path(executable):
+    """Prefer the matching Homebrew opt link without selecting another Python."""
+    python = Path(executable).absolute()
+    try:
+        resolved = python.resolve()
+        for cellar in resolved.parents:
+            if cellar.name != 'Cellar':
+                continue
+            parts = resolved.relative_to(cellar).parts
+            if len(parts) < 4 or not re.fullmatch(r'python(?:3|@\d+(?:\.\d+)*)?', parts[0]):
+                continue
+            candidate = cellar.parent / 'opt' / parts[0] / 'bin' / python.name
+            if candidate.is_file() and candidate.resolve() == resolved:
+                return candidate
+    except (OSError, RuntimeError):
+        # A missing, changed or broken opt link must not redirect this install.
+        pass
+    return python
 
 
 def install():
@@ -26,7 +47,9 @@ def install():
         shortcut = home / 'Desktop/红书.app'
     agent = home / 'Library/LaunchAgents' / (label + '.plist')
     # Keep a stable interpreter symlink (e.g. Homebrew opt), not a versioned keg.
-    python = Path(sys.executable).absolute()
+    # Keep the supervisor available while an external project disk is absent.
+    # It selects the project's .venv only for the actual reader subprocess.
+    python = stable_python_path(getattr(sys, '_base_executable', None) or sys.executable)
     if not python.is_file():
         raise RuntimeError('Missing configured Python: ' + str(python))
     if sys.version_info < (3, 10):

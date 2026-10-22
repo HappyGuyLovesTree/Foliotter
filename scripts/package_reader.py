@@ -9,21 +9,24 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 CODE_NAMES = ['README.md', 'NOTICE.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
               'SECURITY.md', 'CONTRIBUTING.md', 'VERSION', '.gitignore',
-              '安装桌面入口.command', '启动阅读.command']
+              '安装桌面入口.command', '启动阅读.command', 'requirements-import.txt']
 APP_NAMES = ['index.html', 'redbook.svg', 'artwork-guides.js', 'encounter-core.js',
              'encounter-fixture.js', 'encounter-qa.js', 'encounter.js', 'reader.js',
              'reading-aids.css', 'reading-aids.js', 'reading-alignment.js',
              'reading-context.js', 'reading-dictionary-core.js',
              'reading-dictionary.css', 'reading-dictionary.js', 'reading-pages.css',
              'reading-pages.js', 'records-lock-qa.js', 'records-qa-fixture.js',
-             'records.js', 'styles.css', 'library.html', 'library.js', 'library.css']
+             'records.js', 'styles.css', 'library.html', 'library.js', 'library.css', 'i18n.js',
+             'reading-language.js', 'reader-notices.js']
 SCRIPT_NAMES = ['serve.py', 'interpretations.py', 'interpretation_model.py',
                 'reader_background.py', 'install_background_service.py',
                 'package_reader.py', 'install_local_content.py', 'build_icon.cjs',
                 'test_reading_pages.cjs', 'test_reader_background.py', 'test_packaging.py',
                 'epub_import.py', 'test_epub_import.py',
                 'audit_release.py', 'test_audit_release.py', 'test_install_background.py',
-                'test_reader_import.cjs']
+                'test_reader_import.cjs', 'runtime.py', 'setup_importers.py', 'test_runtime.py',
+                'book_import.py', 'import_worker.py', 'import_messages.py', 'test_book_import.py',
+                'test_i18n.cjs', 'test_reading_language.cjs', 'test_record_notices.cjs']
 PACKAGING_NAMES = ['redbook.svg', 'redbook.png', 'RedBook.icns']
 # This is deliberately a fixed list: a new JS, CSS or image may contain private
 # content. Adding a distributable file requires an explicit review here and in

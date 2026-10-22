@@ -11,13 +11,21 @@
 .library-intro p {font:17px/1.9 var(--book);margin:0;color:#f8d7c4;}
 .library-local-note {font-size:12px;line-height:1.9;color:#f8d7c4;margin:0;}
 .library-main {padding:52px 7%;min-width:0;outline:none;}
+.library-settings {display:flex;justify-content:flex-end;align-items:center;gap:12px;margin:0 0 30px;font-size:12px;color:var(--muted);}
+.library-settings select {font-size:13px;min-height:40px;}
+.format-capabilities {font-size:12px;line-height:1.85;color:var(--muted);margin:20px 0 0;overflow-wrap:anywhere;}
+.format-capabilities code {font-size:11px;background:var(--paper-bright);padding:3px 5px;}
+.library-intro h1 {max-width:14ch;}
+.library-intro p,.library-local-note {max-width:32ch;}
 .library-main h2 {font:600 27px/1.35 var(--book);margin:0 0 14px;}
 .library-import {max-width:760px;}
 #import-help {font-size:14px;line-height:1.85;color:var(--muted);max-width:46em;margin:0 0 28px;}
 .library-file-label {display:block;font-size:13px;font-weight:600;margin-bottom:10px;}
-#epub-file {display:block;width:100%;background:var(--paper-bright);padding:12px;font-size:13px;min-height:50px;}
-#epub-file::file-selector-button {background:var(--paper);color:var(--ink);border:1px solid var(--rule);padding:8px 12px;margin-right:14px;font:inherit;cursor:pointer;}
-#epub-file:disabled::file-selector-button {cursor:wait;}
+#epub-file {display:none;}
+.library-file-picker {display:flex;align-items:center;gap:14px;width:100%;background:var(--paper-bright);padding:12px;font-size:13px;min-height:50px;}
+#choose-file-button {background:var(--paper);color:var(--ink);border:1px solid var(--rule);padding:8px 12px;min-height:44px;font:inherit;cursor:pointer;flex:none;}
+#choose-file-button:disabled {cursor:wait;opacity:.5;}
+#selected-file-name {min-width:0;overflow-wrap:anywhere;color:var(--muted);}
 .file-details {font-size:12px;line-height:1.8;color:var(--muted);margin:10px 0 20px;overflow-wrap:anywhere;}
 #import-button {min-height:48px;justify-content:center;gap:22px;}
 #import-button:disabled {background:var(--ink);opacity:.48;}

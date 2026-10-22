@@ -64,13 +64,13 @@ function fixture({reduced=false}={}){
 
 test('one reviewed group uses the longer side, turns within it, then deliberately advances',()=>{
   const h=fixture();
-  assert.equal(h.get('page-count').textContent,'本组 1 / 3 页');
+  assert.equal(h.get('page-count').textContent,'Page 1 of 3');
   assert.equal(h.get('previous-button').disabled,true);
   h.turn(1);h.turn(1);
-  assert.equal(h.get('page-count').textContent,'本组 3 / 3 页');
+  assert.equal(h.get('page-count').textContent,'Page 3 of 3');
   assert.equal(h.get('zh-content').attributes['aria-hidden'],'true');
   assert.equal(h.get('en-content').attributes['aria-hidden'],'false');
-  assert.equal(h.get('next-label').textContent,'下一段');
+  assert.equal(h.get('next-label').textContent,'Next passage');
   assert.deepEqual(h.counts(),{turns:2,advances:0});
   h.turn(1);assert.deepEqual(h.counts(),{turns:2,advances:1});
 });
@@ -81,7 +81,7 @@ test('a temporary snapshot restores its group/page after navigation without clon
   h.setGroup({key:'other',unitId:'en-unit',language:'en',canPrevious:true,canNext:true});
   h.setGroup({key:'reviewed-group',unitId:'zh-unit',language:'zh',canPrevious:false,canNext:true});
   assert(h.reader.restore({blockId:'zh-block'},saved));
-  assert.equal(h.get('page-count').textContent,'本组 2 / 3 页');
+  assert.equal(h.get('page-count').textContent,'Page 2 of 3');
   assert.equal(h.get('zh-content').block,original);
   assert.equal(h.get('zh-content').insertedBefore.children[0],h.get('zh-content'));
 });
@@ -90,14 +90,14 @@ test('continuous context temporarily releases pagination and returns to the same
   const h=fixture();h.turn(1);
   h.reader.setContext(true);
   assert.equal(h.reader.active,false);assert.equal(h.get('zh-content').dataset.paginated,undefined);
-  assert.equal(h.get('next-label').textContent,'下一段');
+  assert.equal(h.get('next-label').textContent,'Next passage');
   h.reader.setContext(false);
-  assert.equal(h.reader.active,true);assert.equal(h.get('page-count').textContent,'本组 2 / 3 页');
+  assert.equal(h.reader.active,true);assert.equal(h.get('page-count').textContent,'Page 2 of 3');
 });
 
 test('reduced motion has identical page endpoints with no animation; ordinary motion is bounded',()=>{
   const reduced=fixture({reduced:true});reduced.turn(1);
-  assert.equal(reduced.animations.length,0);assert.equal(reduced.get('page-count').textContent,'本组 2 / 3 页');
+  assert.equal(reduced.animations.length,0);assert.equal(reduced.get('page-count').textContent,'Page 2 of 3');
   const regular=fixture();regular.turn(1);regular.turn(1);
   assert.equal(regular.animations.length,4);
   assert(regular.animations.slice(0,2).every(item=>item.cancelled));
@@ -110,4 +110,16 @@ test('page keys work from the turn controls and leave text inputs alone',()=>{
   h.listeners.keydown(event);assert.equal(clicked,1);assert.equal(event.defaultPrevented,true);
   h.listeners.keydown({key:'ArrowRight',target:{closest:()=>({})}});
   assert.equal(clicked,1);
+});
+
+
+test('a hidden language does not create blank pages or affect the visible page count',()=>{
+  const h=fixture();
+  h.get('zh-column').hidden=true;
+  h.get('zh-content').pages=80;
+  h.reader.restore({});
+  assert.equal(h.get('page-count').textContent,'Page 1 of 3');
+  h.turn(1);h.turn(1);
+  assert.equal(h.get('page-count').textContent,'Page 3 of 3');
+  h.turn(1);assert.equal(h.counts().advances,1);
 });

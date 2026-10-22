@@ -3,6 +3,7 @@
 // Browser columns paginate the original live DOM. No text slicing, cloned note
 // controls or inferred sentence pairs enter the source/alignment/record models.
 window.ReadingPages = (() => {
+  const t=(en,zh)=>window.FoliotterI18n?.text(en,zh) ?? en;
   function create({onTurn=()=>{}}={}) {
     const $=id=>document.getElementById(id);
     const body=document.body,stage=$('reading-stage'),spread=document.querySelector('.bilingual');
@@ -12,7 +13,7 @@ window.ReadingPages = (() => {
       const viewport=document.createElement('div');viewport.className='page-viewport';
       content.before(viewport);viewport.append(content);
       const ended=document.createElement('p');ended.className='page-ended';ended.hidden=true;
-      ended.textContent=`本组${language==='zh'?'中文':'英文'}已读完`;viewport.append(ended);
+      ended.textContent=t(`${language==='zh'?'Chinese':'English'} passage finished`, `本组${language==='zh'?'中文':'英文'}已读完`);viewport.append(ended);
       return {language,content,column,viewport,ended,count:1,width:0,stride:0};
     });
     let group=null,page=0,total=1,context=false,frame=0,resume=null,dimensions=null;
@@ -29,19 +30,19 @@ window.ReadingPages = (() => {
     function updateControls(){
       const previous=$('previous-button'),next=$('next-button');
       const hasPreviousPage=!context && page>0,hasNextPage=!context && page<total-1;
-      const previousText=hasPreviousPage?'上一页':'上一段',nextText=hasNextPage?'下一页':'下一段';
+      const previousText=hasPreviousPage?t('Previous page','上一页'):t('Previous passage','上一段'),nextText=hasNextPage?t('Next page','下一页'):t('Next passage','下一段');
       previous.disabled=!hasPreviousPage && !group?.canPrevious;next.disabled=!hasNextPage && !group?.canNext;
       previous.setAttribute('aria-label',previousText);next.setAttribute('aria-label',nextText);
       $('previous-label').textContent=previousText;$('next-label').textContent=nextText;
-      $('page-count').textContent=total===1?'完整一组':`本组 ${page+1} / ${total} 页`;
-      $('page-explanation').textContent=total===1?'':group?.aligned?'分页按阅读长度，两栏仍按整组对应':'按当前底本分页';
+      $('page-count').textContent=total===1?t('One page','完整一页'):t(`Page ${page+1} of ${total}`,`第 ${page+1} / ${total} 页`);
+      $('page-explanation').textContent=total===1?'':group?.aligned?t('Original passages stay paired','分页保持原段对应'):t('Paginated from the original text','按当前原文分页');
       spread.dataset.page=String(page+1);spread.dataset.pages=String(total);
     }
     function display({motion=false,notify=false}={}){
       page=Math.max(0,Math.min(total-1,page));
       for(const pane of panes){
         const finished=page>=pane.count;
-        pane.ended.textContent=pane.content.querySelector('.parallel-empty')?`本组暂无已确认的${pane.language==='zh'?'中文':'英文'}对照`:`本组${pane.language==='zh'?'中文':'英文'}已读完`;
+        pane.ended.textContent=t(`${pane.language==='zh'?'Chinese':'English'} passage finished`,`本组${pane.language==='zh'?'中文':'英文'}已读完`);
         pane.ended.hidden=!finished;pane.viewport.classList.toggle('page-is-finished',finished);
         pane.content.setAttribute('aria-hidden',String(finished));
         pane.content.style.transform=`translateX(${-Math.min(page,pane.count-1)*pane.stride}px)`;
@@ -82,6 +83,7 @@ window.ReadingPages = (() => {
       cancelAnimationFrame(frame);frame=0;
       const before=keep || snapshot();
       for(const pane of panes){
+        if(pane.column.hidden){pane.count=1;pane.width=0;pane.stride=1;continue;}
         pane.content.style.transform='none';pane.content.removeAttribute('aria-hidden');
         pane.ended.hidden=true;pane.viewport.classList.remove('page-is-finished');
         pane.width=Math.max(1,Math.floor(pane.viewport.clientWidth));pane.stride=pane.width+32;
@@ -92,8 +94,8 @@ window.ReadingPages = (() => {
       }
       // A bounded width allocation helps a longer English version use the screen.
       // Font sizes are user-selected, never shrunk to force a paragraph to fit.
-      for(const pane of panes)pane.count=Math.max(1,Math.ceil((pane.content.scrollWidth-pane.width-1)/pane.stride)+1);
-      total=Math.max(...panes.map(pane=>pane.count));
+      for(const pane of panes)if(!pane.column.hidden)pane.count=Math.max(1,Math.ceil((pane.content.scrollWidth-pane.width-1)/pane.stride)+1);
+      total=Math.max(1,...panes.filter(pane=>!pane.column.hidden).map(pane=>pane.count));
       const font=panes.map(pane=>getComputedStyle(pane.content).fontSize).join('|');
       display();dimensions={width:spread.clientWidth,height:spread.clientHeight,font};
       if(before?.key===group.key){
@@ -167,6 +169,7 @@ window.ReadingPages = (() => {
     spread.addEventListener('load',refresh,true);spread.addEventListener('error',refresh,true);
     document.fonts?.ready.then(refresh);
     media.addEventListener?.('change',cancelMotion);
+    window.FoliotterI18n?.subscribe(()=>{updateControls();display();});
     $('book-navigation').hidden=true;
     return {setGroup,refresh,restore,setContext,snapshot,turn,
       get active(){return !context && Boolean(group);},

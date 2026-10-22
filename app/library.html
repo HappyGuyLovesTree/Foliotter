@@ -1,49 +1,53 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#a32b22">
-  <meta name="description" content="书獭 Foliotter：导入自己的 EPUB，在本机阅读、收藏和记笔记。">
-  <title>书獭 Foliotter · 我的书库</title>
+  <meta name="description" content="Foliotter: bring your own books, read locally and keep your notes.">
+  <title data-ui-en="Foliotter · My library" data-ui-zh="书獭 Foliotter · 我的书库">Foliotter · My library</title>
   <link rel="icon" type="image/svg+xml" href="/redbook.svg">
   <link rel="stylesheet" href="/styles.css">
   <link rel="stylesheet" href="/library.css">
+  <script src="/i18n.js" defer></script>
   <script src="/library.js" defer></script>
 </head>
 <body class="library-page">
-  <a class="skip-link" href="#library-main">跳到书库</a>
+  <a class="skip-link" href="#library-main" data-ui-en="Skip to library" data-ui-zh="跳到书库">Skip to library</a>
   <div class="library-layout">
     <header class="library-cover">
-      <a class="library-brand" href="/library.html" aria-label="书獭 Foliotter 书库"><span>书獭</span><span lang="en">Foliotter</span></a>
+      <a class="library-brand" href="/library.html" aria-label="Foliotter library" data-ui-aria-label-en="Foliotter library" data-ui-aria-label-zh="书獭 Foliotter 书库"><span>书獭</span><span lang="en">Foliotter</span></a>
       <div class="library-intro">
         <svg class="library-mark" viewBox="0 0 160 120" fill="none" aria-hidden="true"><path d="M20 26h44l16 10 16-10h44v66H96l-16 10-16-10H20V26Z"/><path d="M80 36v66M35 42h25M35 55h25M35 68h25M100 42h25M100 55h25M100 68h25"/></svg>
-        <h1>抱着一本书，<br>漂一会儿。</h1>
-        <p>把自己的电子书带来。<br>读一段，留一句，再继续。</p>
+        <h1 data-ui-en="Hold a book. Drift awhile." data-ui-zh="抱着一本书，漂一会儿。">Hold a book. Drift awhile.</h1>
+        <p data-ui-en="Bring your books. Read a passage, leave a thought, keep going." data-ui-zh="把自己的电子书带来。读一段，留一句，再继续。">Bring your books. Read a passage, leave a thought, keep going.</p>
       </div>
-      <p class="library-local-note">无需账户。书留在本机，<br>阅读记录留在此浏览器。</p>
+      <p class="library-local-note" data-ui-en="No account needed. Books stay on this computer; reading records stay in this browser." data-ui-zh="无需账户。书留在本机，阅读记录留在此浏览器。">No account needed. Books stay on this computer; reading records stay in this browser.</p>
     </header>
     <main id="library-main" class="library-main" tabindex="-1">
+      <div class="library-settings"><label for="library-ui-language" data-ui-en="Interface language" data-ui-zh="界面语言">Interface language</label><select id="library-ui-language" data-ui-locale><option value="en">English</option><option value="zh">中文</option></select></div>
       <section class="library-import" aria-labelledby="import-title">
-        <h2 id="import-title">带一本书进来</h2>
-        <p id="import-help">选择你有权使用的无 DRM EPUB，最大 60 MiB。文件仅由本机服务解析，不会上传到互联网。</p>
+        <h2 id="import-title" data-ui-en="Bring a book" data-ui-zh="带一本书进来">Bring a book</h2>
+        <p id="import-help" data-ui-en="Choose a DRM-free book you have the right to use, up to 60 MiB. It is processed on this computer, never uploaded to the internet." data-ui-zh="选择你有权使用的无 DRM 电子书，最大 60 MiB。文件仅由本机服务处理，不会上传到互联网。">Choose a DRM-free book you have the right to use, up to 60 MiB. It is processed on this computer, never uploaded to the internet.</p>
         <form id="epub-import-form">
-          <label for="epub-file" class="library-file-label">选择 EPUB 电子书</label>
-          <input id="epub-file" name="epub" type="file" accept=".epub,application/epub+zip" aria-describedby="import-help file-details">
-          <p id="file-details" class="file-details">支持 EPUB 2 / 3 的文字与常见图片；不支持 PDF、MOBI 或加密电子书。</p>
-          <button id="import-button" class="primary-button" type="submit" disabled>导入并开始阅读 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>
+          <label for="choose-file-button" class="library-file-label" data-ui-en="Choose an ebook" data-ui-zh="选择电子书">Choose an ebook</label>
+          <div class="library-file-picker"><button id="choose-file-button" type="button" aria-describedby="import-help selected-file-name file-details" data-ui-en="Choose file" data-ui-zh="选择文件">Choose file</button><span id="selected-file-name" aria-live="polite">No file selected</span></div>
+          <input id="epub-file" name="epub" type="file" accept=".epub,.pdf,.txt,.mobi,.azw3,.fb2" aria-label="Choose an ebook" data-ui-aria-label-en="Choose an ebook" data-ui-aria-label-zh="选择电子书" aria-describedby="import-help file-details" hidden>
+          <p id="file-details" class="file-details">Checking available formats…</p>
+          <button id="import-button" class="primary-button" type="submit" disabled><span id="import-button-label">Import and read</span> <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>
         </form>
-        <div id="import-feedback" class="import-feedback" role="status" aria-live="polite" hidden><progress id="import-progress" aria-label="正在本机处理电子书" hidden></progress><p id="import-status"></p></div>
-        <details class="import-support"><summary>哪些内容可以导入？</summary><p>适合文字型 EPUB 2 / 3。提取章节、文字和 PNG、JPEG、GIF、WebP 图片，使用书獭的阅读版式；不会加载原书字体、网页脚本或外部资源。</p><p>加密或 DRM 文件、固定版式、SVG、音视频与交互内容不支持。包含加密字体或特殊 XML 声明的文件也可能无法导入；失败时会说明原因，不会改动原文件。</p></details>
+        <p id="format-capabilities" class="format-capabilities" role="status">Checking available formats…</p>
+        <div id="import-feedback" class="import-feedback" role="status" aria-live="polite" hidden><progress id="import-progress" aria-label="Processing the book locally" data-ui-aria-label-en="Processing the book locally" data-ui-aria-label-zh="正在本机处理电子书" hidden></progress><p id="import-status"></p></div>
+        <details class="import-support"><summary data-ui-en="What can I import?" data-ui-zh="哪些内容可以导入？">What can I import?</summary><p data-ui-en="EPUB, TXT and FB2 work without extra setup. PDF, MOBI and AZW3 use optional local import tools; availability is shown above. PDF must contain selectable text; OCR is not included." data-ui-zh="EPUB、TXT 和 FB2 无需额外安装。PDF、MOBI 和 AZW3 需要可选本机工具，实际可用状态见上方。PDF 需要可选取的文字，本版不含扫描页 OCR。">EPUB, TXT and FB2 work without extra setup. PDF, MOBI and AZW3 use optional local import tools; availability is shown above. PDF must contain selectable text; OCR is not included.</p><p data-ui-en="Books use Foliotter’s reading layout. Original fonts, scripts, external resources, audio and video are not loaded. DRM and encrypted files are unsupported. Import errors leave your original file untouched." data-ui-zh="电子书使用书獭阅读版式；不加载原书字体、脚本、外部资源、音视频。不支持 DRM 和加密文件；导入失败不会改动原文件。">Books use Foliotter’s reading layout. Original fonts, scripts, external resources, audio and video are not loaded. DRM and encrypted files are unsupported. Import errors leave your original file untouched.</p></details>
       </section>
       <section class="library-shelf" aria-labelledby="shelf-title">
-        <div class="shelf-heading"><h2 id="shelf-title">我的书库 <span id="book-count"></span></h2><button id="library-refresh" class="text-button" type="button">刷新书库</button></div>
-        <p id="library-status" class="library-status" role="status">正在打开本机书库…</p>
-        <ul id="book-list" class="book-list" aria-label="已导入的电子书"></ul>
-        <div id="library-empty" class="library-empty" hidden><h3>第一本，由你来选。</h3><p>导入后，你的书会留在这里。阅读位置、收藏与笔记按书分别保存。</p><button id="choose-first-book" class="text-button" type="button">选择我的第一本 EPUB</button></div>
-        <a id="legacy-book" class="legacy-book" href="/" hidden><span><strong>已有的本机阅读资料</strong><small>继续阅读原来的书，保留原有笔记与进度</small></span><span aria-hidden="true">→</span></a>
+        <div class="shelf-heading"><h2 id="shelf-title"><span data-ui-en="My library" data-ui-zh="我的书库">My library</span> <span id="book-count"></span></h2><button id="library-refresh" class="text-button" type="button" data-ui-en="Refresh library" data-ui-zh="刷新书库">Refresh library</button></div>
+        <p id="library-status" class="library-status" role="status">Opening your local library…</p>
+        <ul id="book-list" class="book-list" aria-label="Imported books" data-ui-aria-label-en="Imported books" data-ui-aria-label-zh="已导入的电子书"></ul>
+        <div id="library-empty" class="library-empty" hidden><h3 data-ui-en="Your first book is up to you." data-ui-zh="第一本，由你来选。">Your first book is up to you.</h3><p data-ui-en="Your books will live here. Reading positions, bookmarks and notes stay separate for each book." data-ui-zh="导入后，你的书会留在这里。阅读位置、收藏与笔记按书分别保存。">Your books will live here. Reading positions, bookmarks and notes stay separate for each book.</p><button id="choose-first-book" class="text-button" type="button" data-ui-en="Choose my first book" data-ui-zh="选择我的第一本书">Choose my first book</button></div>
+        <a id="legacy-book" class="legacy-book" href="/" hidden><span><strong data-ui-en="Existing local reading collection" data-ui-zh="已有的本机阅读资料">Existing local reading collection</strong><small data-ui-en="Continue your original book with its notes and progress" data-ui-zh="继续阅读原来的书，保留原有笔记与进度">Continue your original book with its notes and progress</small></span><span aria-hidden="true">→</span></a>
       </section>
-      <footer class="library-footer"><span>Foliotter · 书獭</span><span>开源阅读器 · 书籍由你提供</span></footer>
+      <footer class="library-footer"><span>Foliotter · 书獭</span><span data-ui-en="Open-source reader · Your own books" data-ui-zh="开源阅读器 · 书籍由你提供">Open-source reader · Your own books</span></footer>
     </main>
   </div>
 </body>

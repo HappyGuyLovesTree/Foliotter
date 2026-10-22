@@ -24,7 +24,7 @@ MAX_XML_BYTES = 8 * 1024 * 1024
 MAX_ENTRIES = 6000
 MAX_UNITS = 30000
 MAX_TEXT_CHARS = 12000000
-BOOK_ID_RE = re.compile(r'epub-[0-9a-f]{64}\Z')
+BOOK_ID_RE = re.compile(r'(?:epub|pdf|txt|mobi|azw3|fb2)-[0-9a-f]{64}\Z')
 ASSET_RE = re.compile(r'[0-9a-f]{64}\.(?:png|jpg|gif|webp)\Z')
 IMPORT_LOCK = threading.RLock()
 SKIP_TAGS = {'script', 'style', 'iframe', 'object', 'embed', 'audio', 'video', 'svg', 'math', 'form', 'button', 'input', 'select', 'textarea'}
@@ -281,8 +281,8 @@ class EpubParser:
         metadata = next((e for e in opf if tag(e) == 'metadata'), None)
         def fields(name):
             return [clean(''.join(e.itertext())) for e in (metadata if metadata is not None else []) if tag(e) == name and clean(''.join(e.itertext()))]
-        self.title = (fields('title') or ['未命名电子书'])[0][:500]
-        self.author = ', '.join(fields('creator'))[:1000] or '作者未注明'
+        self.title = (fields('title') or ['Untitled book'])[0][:500]
+        self.author = ', '.join(fields('creator'))[:1000]
         self.language = (fields('language') or ['und'])[0][:80]
         self.slot = 'zh' if self.language.lower().startswith(('zh', 'cmn')) else 'en'
         for e in opf.iter():
@@ -346,7 +346,7 @@ class EpubParser:
             if body is None:
                 continue
             heading = next((clean(''.join(e.itertext())) for e in body.iter() if tag(e) in {'h1', 'h2', 'h3'} and clean(''.join(e.itertext()))), None)
-            title = toc.get(path) or heading or f'章节 {len(self.sections) + 1}'
+            title = toc.get(path) or heading or f'Section {len(self.sections) + 1}'
             section_id = 's-' + hashlib.sha256(path.encode()).hexdigest()[:24]
             section = {'id': section_id, 'parentId': None, 'order': len(self.sections), 'title': {'zh': title, 'en': title}, 'kind': 'support' if ref.get('linear') == 'no' else 'main', 'readingOrder': {'zh': [], 'en': []}, 'sourceRanges': {}, 'noteIds': {'zh': [], 'en': []}, 'imageIds': [], 'chapterMatch': {'status': 'monolingual'}}
             self.sections.append(section)
@@ -418,9 +418,9 @@ class EpubParser:
         if not self.units or not self.text_count:
             fail('no_text', '未找到可阅读文字；暂不支持纯扫描图片或无正文 EPUB。')
         now = datetime.now(timezone.utc).isoformat(timespec='seconds')
-        book = {'id': self.book_id, 'title': self.title, 'author': self.author, 'language': self.language, 'unitCount': len(self.units), 'chapterCount': len(self.sections), 'importedAt': now}
+        book = {'id': self.book_id, 'format': 'epub', 'title': self.title, 'author': self.author, 'language': self.language, 'unitCount': len(self.units), 'chapterCount': len(self.sections), 'importedAt': now}
         sha = self.book_id[5:]
-        data = {'schemaVersion': 2, 'metadata': {**book, 'bookId': self.book_id, 'datasetId': sha, 'datasetVersion': 'epub-import-1', 'schemaVersion': 2, 'imported': True, 'primaryLanguage': self.slot, 'sources': [{'language': self.slot, 'originalLanguage': self.language, 'sha256': sha, 'title': self.title}], 'sourceFiles': [], 'importMethod': 'Local stdlib ZIP/XML; plain text and allowlisted raster images; no network', 'networkUsedForImport': False, 'sourceFilesCopiedToWebRoot': False, 'limitations': ['仅按 EPUB spine 文件划分章节；章节内文字按原序保留。', '不保留原版式、链接、交互、媒体、脚注跳转或自动双语配对。', 'SVG 和无法验证的图片会跳过。'], 'skippedImageCount': self.unsupported_images}, 'units': self.units, 'sections': self.sections, 'imagesById': self.images, 'notesById': {}, 'legacy': {'unitAliases': {}, 'blockAliases': {}}}
+        data = {'schemaVersion': 2, 'metadata': {**book, 'bookId': self.book_id, 'datasetId': sha, 'datasetVersion': 'epub-import-1', 'schemaVersion': 2, 'imported': True, 'primaryLanguage': self.slot, 'sources': [{'language': self.slot, 'originalLanguage': self.language, 'sha256': sha, 'title': self.title}], 'sourceFiles': [], 'importMethod': 'Local stdlib ZIP/XML; plain text and allowlisted raster images; no network', 'networkUsedForImport': False, 'sourceFilesCopiedToWebRoot': False, 'limitations': ['Sections follow EPUB spine files; text keeps its source order.', 'Original layout, links, interactive media and note navigation are not retained; no bilingual alignment is created.', 'SVG and unverified images are skipped.'], 'skippedImageCount': self.unsupported_images}, 'units': self.units, 'sections': self.sections, 'imagesById': self.images, 'notesById': {}, 'legacy': {'unitAliases': {}, 'blockAliases': {}}}
         return book, data, self.assets
 
 

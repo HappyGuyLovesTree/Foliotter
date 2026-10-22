@@ -11,17 +11,22 @@ from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse, unquote
 
 ROOT = Path(__file__).resolve().parents[1]
+if __name__ == '__main__':
+    from runtime import prefer_project_python
+    prefer_project_python(ROOT)
 APP = ROOT / 'app'
 CANDIDATE = ROOT / 'data/fullbook-candidate'
 VERSION = (ROOT / 'VERSION').read_text(encoding='utf-8').strip()
 if not VERSION:
     raise ValueError('VERSION must not be empty')
-BUILD = '2026-10-22.opensource-1'
+BUILD = '2026-10-22.formats-languages-1'
 LIBRARY = ROOT / 'user-library'
 DATA_LOCK = threading.RLock()
 DATA_CACHE = {}
 from interpretations import snapshot as interpretation_snapshot, stamp
-from epub_import import import_epub, list_books, library_file, ImportFailure, MAX_EPUB_BYTES
+from epub_import import list_books, library_file, ImportFailure, MAX_EPUB_BYTES
+from book_import import FORMATS, capabilities, import_book
+from import_messages import EN, notice
 
 
 def reading_data(dataset):
@@ -66,7 +71,7 @@ class ReaderHandler(SimpleHTTPRequestHandler):
             self.json_response({'status': 'error', 'reason': 'invalid_origin', 'notice': '仅允许本机阅读页面同源访问。'}, 403)
             return False
         if mutation and (origins != ['http://' + hosts[0]] or self.headers.get_all('X-Reader-Request', []) != ['local-import']):
-            self.json_response({'status': 'error', 'reason': 'import_origin', 'notice': '请从本机书架页面选择 EPUB 导入。'}, 403)
+            self.json_response({'status': 'error', 'reason': 'import_origin', 'notice': '请从本机书架页面选择电子书导入。'}, 403)
             return False
         return True
 
@@ -79,29 +84,41 @@ class ReaderHandler(SimpleHTTPRequestHandler):
             return
         if urlparse(self.path).path != '/api/library/import':
             return self.json_response({'status': 'error', 'reason': 'not_found', 'notice': '没有此接口。'}, 404)
-        if self.headers.get('Transfer-Encoding') or self.headers.get_all('Content-Type', []) != ['application/epub+zip']:
-            return self.json_response({'status': 'error', 'reason': 'invalid_content_type', 'notice': '请使用 EPUB 文件导入。'}, 415)
+        content_types = self.headers.get_all('Content-Type', [])
+        content_type = content_types[0].split(';', 1)[0].strip().lower() if len(content_types) == 1 else ''
+        if self.headers.get('Transfer-Encoding') or content_type not in {*FORMATS.values(), 'application/octet-stream', 'application/fb2+xml'}:
+            return self.json_response({'status': 'error', 'reason': 'invalid_content_type', 'notice': '请选择 EPUB、PDF、TXT、MOBI、AZW3 或 FB2 文件。'}, 415)
+        filenames = self.headers.get_all('X-File-Name', [])
+        if len(filenames) > 1 or (filenames and (len(filenames[0]) > 4096 or re.search(r'%(?![0-9A-Fa-f]{2})', filenames[0]))):
+            return self.json_response({'status': 'error', 'reason': 'invalid_filename', 'notice': '文件名无效，请重新选择电子书。'}, 400)
+        try:
+            filename = unquote(filenames[0], encoding='utf-8', errors='strict') if filenames else ''
+        except UnicodeError:
+            return self.json_response({'status': 'error', 'reason': 'invalid_filename', 'notice': '文件名无效，请重新选择电子书。'}, 400)
         lengths = self.headers.get_all('Content-Length', [])
         if len(lengths) != 1 or not re.fullmatch(r'[0-9]{1,12}', lengths[0]):
             return self.json_response({'status': 'error', 'reason': 'invalid_length', 'notice': '缺少有效的文件长度。'}, 400)
         length = int(lengths[0])
         if length <= 0 or length > MAX_EPUB_BYTES:
-            return self.json_response({'status': 'error', 'reason': 'file_too_large', 'notice': '请选择非空且不超过 60 MiB 的 EPUB。'}, 413)
+            return self.json_response({'status': 'error', 'reason': 'file_too_large', 'notice': '请选择非空且不超过 60 MiB 的电子书。'}, 413)
         try:
             self.connection.settimeout(30)
             raw = self.rfile.read(length)
             if len(raw) != length:
                 return self.json_response({'status': 'error', 'reason': 'incomplete_upload', 'notice': '文件传输不完整，请重新选择。'}, 400)
-            book = import_epub(raw, LIBRARY)
+            book = import_book(raw, LIBRARY, filename, content_type)
             return self.json_response({'book': book, 'url': '/?book=' + book['id']}, 201)
         except ImportFailure as error:
             return self.import_error(error)
         except (socket.timeout, TimeoutError):
             return self.json_response({'status': 'error', 'reason': 'upload_timeout', 'notice': '本机文件传输超时，请重试。'}, 408)
         except (OSError, ValueError):
-            return self.json_response({'status': 'error', 'reason': 'import_failed', 'notice': '导入未完成；请检查 EPUB 格式和本地磁盘空间。已有书籍已保留。'}, 500)
+            return self.json_response({'status': 'error', 'reason': 'import_failed', 'notice': '导入未完成；请检查电子书格式和本地磁盘空间。已有书籍已保留。'}, 500)
 
     def json_response(self, data, status=200):
+        if isinstance(data, dict) and data.get('reason') in EN and 'notice' in data:
+            language = 'zh' if self.headers.get('X-UI-Language') == 'zh' else 'en'
+            data = {**data, 'notice': notice(data['reason'], data['notice'], language)}
         body = json.dumps(data, ensure_ascii=False).encode()
         try:
             self.send_response(status)
@@ -128,6 +145,8 @@ class ReaderHandler(SimpleHTTPRequestHandler):
                 return self.import_error(error)
             except OSError:
                 return self.json_response({'status': 'error', 'reason': 'library_unavailable', 'notice': '无法读取本地书架，请检查磁盘是否可用。'}, 503)
+        if parsed.path == '/api/library/capabilities':
+            return self.json_response(capabilities())
         if parsed.path.startswith('/api/library/'):
             stream = self.library_stream()
             if stream:
@@ -162,7 +181,7 @@ class ReaderHandler(SimpleHTTPRequestHandler):
 
     def library_stream(self):
         path = unquote(urlparse(self.path).path)
-        match = re.fullmatch(r'/api/library/(epub-[0-9a-f]{64})/(reading\.json|assets/[0-9a-f]{64}\.(?:png|jpg|gif|webp))', path)
+        match = re.fullmatch(r'/api/library/((?:epub|pdf|txt|mobi|azw3|fb2)-[0-9a-f]{64})/(reading\.json|assets/[0-9a-f]{64}\.(?:png|jpg|gif|webp))', path)
         if not match:
             self.json_response({'status': 'error', 'reason': 'not_found', 'notice': '未找到这项书籍资源。'}, 404)
             return None
