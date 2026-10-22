@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#a32b22">
+  <meta name="description" content="书獭 Foliotter：导入自己的 EPUB，在本机阅读、收藏和记笔记。">
+  <title>书獭 Foliotter · 本机阅读</title>
+  <link rel="icon" type="image/svg+xml" href="/redbook.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/reading-aids.css">
+  <link rel="stylesheet" href="/reading-dictionary.css">
+  <link rel="stylesheet" href="/reading-pages.css">
+  <script src="/records.js" defer></script>
+  <script src="/reading-aids.js" defer></script>
+  <script src="/reading-dictionary-core.js" defer></script>
+  <script src="/reading-dictionary.js" defer></script>
+  <script src="/reading-alignment.js" defer></script>
+  <script src="/reading-context.js" defer></script>
+  <script src="/reading-pages.js" defer></script>
+  <script src="/reader.js" defer></script>
+  <script src="/encounter-core.js" defer></script>
+  <script src="/artwork-guides.js" defer></script>
+  <script src="/encounter.js" defer></script>
+</head>
+<body>
+  <!-- THESIS: One stable bilingual book page; long reviewed groups continue by page turns.
+  OWN-WORLD: Existing vermilion, ink and warm paper, square controls and source typography.
+  STORY: Read a complete group, turn only when needed, consult context and return to the same page.
+  FIRST VIEWPORT: Compact chapter header and tools frame two live source columns, with page turns below.
+  FORM: User-approved Read direction: full-height paired pages, comfortable fixed type, no inferred sentence pairs.
+  FINISH: Desktop/mobile, source identity and return behavior verified in bounded passes. -->
+  <a class="skip-link" href="#reading">跳到正文</a>
+  <button id="navigation-shade" class="navigation-shade" type="button" aria-label="关闭阅读导航" hidden></button>
+  <aside id="book-navigation" class="book-rail" aria-label="阅读导航" hidden>
+    <button id="navigation-close" class="rail-action" type="button">关闭目录 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button>
+    <div class="book-title"><span class="title-zh">书獭</span><span class="title-en" lang="en">Foliotter</span><span class="book-author"></span></div>
+    <div class="rail-rule"></div>
+    <a class="rail-action" href="/library.html">书库与导入 <span aria-hidden="true">→</span></a>
+    <button id="today-button" class="rail-action" type="button"><span>今日首段</span><span id="today-number">—</span></button>
+    <button id="history-button" class="rail-action" type="button"><span>阅读足迹</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2-5.3M4 4v5h5M12 7v5l3 2"/></svg></button>
+    <button id="contents-button" class="rail-action" type="button" hidden>全书目录 <span aria-hidden="true">→</span></button>
+    <button id="search-button" class="rail-action" type="button">搜索书文 <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></svg></button>
+    <button id="records-button" class="rail-action" type="button">备份与恢复 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-4-4 4 4 4-4M4 16v5h16v-5"/></svg></button>
+    <details class="sequence" id="sequence-details" open>
+      <summary><span>顺序阅读</span><span class="sequence-count">共 <span id="total-count">20</span> 单元</span></summary>
+      <nav id="unit-index" class="unit-index" aria-label="按顺序选择阅读单元"></nav>
+    </details>
+    <div id="language-controls" class="language-controls" hidden><label for="language-select">翻段语言</label><select id="language-select"><option value="zh">中文</option><option value="en">English</option></select><button id="search-return" class="text-button" type="button" hidden>返回搜索结果</button></div>
+    <div class="rail-bottom"><span id="dataset-label">本机阅读</span><p>从完整原段开始。<br>把解释留到你想看的时候。</p><span class="local-label">本机阅读 · 记录存于此浏览器</span></div>
+  </aside>
+
+  <main id="reading" class="reading-shell" tabindex="-1">
+    <header class="reading-top">
+      <button id="navigation-toggle" class="icon-button" type="button" aria-label="打开阅读导航" aria-controls="book-navigation" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg></button>
+      <span class="workspace-brand">书獭</span>
+      <div class="chapter-heading"><div><h1 id="chapter-zh" tabindex="-1">正在打开…</h1><p id="chapter-en" lang="en"></p></div><div class="unit-mark"><span id="current-number">—</span><span id="unit-total"></span></div></div>
+      <span id="scope-label" class="visually-hidden"></span>
+      <a class="reader-library-link text-button" href="/library.html" aria-label="打开书库与导入电子书">书库</a>
+      <button id="record-button" class="text-button" type="button">我的记录 <span id="record-indicator" aria-hidden="true"></span></button>
+    </header>
+    <p id="storage-notice" class="storage-notice" role="status" hidden></p>
+    <div id="load-state" class="load-state" role="status">正在打开正文…</div>
+    <article id="reader" hidden>
+      <div class="reader-toolbar">
+        <button id="artwork-open" class="primary-button artwork-entry" type="button" disabled>遇见一页原画</button>
+        <button id="random-button" class="primary-button" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h3c4 0 5 10 9 10h6m-4-4 4 4-4 4M3 17h3c1.7 0 3-1.6 4.2-3.6M13.8 10.6C15 8.6 16.3 7 18 7h3m-4-4 4 4-4 4"/></svg>再遇一段</button>
+        <button id="favorite-button" class="icon-button favorite-button" type="button" aria-label="收藏本段" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18l-6-4-6 4z"/></svg></button>
+        <div class="reading-tools" aria-label="阅读辅助"><button id="context-toggle" class="text-button aid-entry" type="button" aria-expanded="false" aria-controls="context-before context-after">展开前后文</button><button id="reading-aids-open" class="text-button" type="button">词注与典故</button><button id="language-choose" class="text-button" type="button" hidden>另选英文位置</button></div>
+        <details id="reader-more" class="reader-more"><summary>更多资料</summary>
+        <div class="reading-resources">
+          <button id="notes-button" type="button">书中注释 <span id="notes-count" class="count-badge">0</span></button>
+          <button id="chapter-notes-button" class="text-button chapter-notes-button" type="button" hidden>本章全部书注</button>
+          <button id="source-button" type="button" class="text-button">版本与对应</button>
+          <button id="related-button" type="button">相关解读 <span id="search-indicator" class="status-dot"></span><span id="related-status" class="visually-hidden"></span></button>
+        </div>
+        </details>
+        <label class="reader-size-label" for="reader-size">字号 <select id="reader-size"><option value="0">标准</option><option value="1">大</option><option value="2">更大</option></select></label>
+      </div>
+      <div class="artwork-reading-return"><button id="artwork-return" class="text-button" type="button" hidden>返回刚才画页</button><button id="artwork-return-origin" class="text-button" type="button" hidden>返回进入前正文</button></div>
+      <nav id="lookup-reading-return" class="dict-reading-return" aria-label="词典查阅返回" hidden><button id="lookup-return" class="text-button" type="button">回到查阅起点原文</button><button id="lookup-reopen" class="text-button" type="button">返回刚才查阅</button><button id="lookup-continue" class="text-button" type="button">在这里继续阅读</button></nav>
+      <section id="reading-stage" class="reading-stage" aria-label="中英对照书页">
+      <nav id="context-navigation" class="context-navigation" aria-label="前后文阅读" hidden>
+        <div class="context-route" role="group" aria-label="展开内容导航">
+          <button id="context-show-before" type="button"><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 13V3M3 8l5-5 5 5"/></svg><span id="context-before-count">前文</span></button>
+          <button id="context-origin" type="button">阅读起点</button>
+          <button id="context-show-after" type="button"><span id="context-after-count">后文</span><svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8l5 5 5-5"/></svg></button>
+        </div>
+        <button id="context-collapse" class="text-button" type="button" aria-label="收起前后文，回到阅读起点">收起</button>
+        <p id="context-status" role="status"></p>
+      </nav>
+      <section id="context-before" class="inline-context" aria-label="前文" hidden></section>
+      <p id="context-origin-label" class="context-origin-label" tabindex="-1" hidden>你感兴趣的这一段</p>
+      <div id="alignment-notice" class="alignment-notice" hidden></div>
+      <div class="bilingual" tabindex="-1">
+        <section class="language-column" aria-labelledby="zh-title"><h2 id="zh-title">中文<span>中文底本</span></h2><div id="zh-content" class="book-text" lang="zh-CN"></div></section>
+        <section class="language-column" aria-labelledby="en-title"><h2 id="en-title">English<span>Reader’s Edition</span></h2><div id="en-content" class="book-text english-text" lang="en"></div></section>
+      </div>
+      <details id="original-language" class="original-language" hidden><summary>原作附载文本 <span>本单元的拉丁原文</span></summary><div id="original-content" class="book-text original-text"></div></details>
+      <section id="context-after" class="inline-context" aria-label="后文" hidden></section>
+      </section>
+      <footer class="page-footer">
+        <nav class="page-turns" aria-label="书页翻页">
+          <button id="previous-button" type="button" aria-label="上一段"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m14 6-6 6 6 6"/></svg><span id="previous-label">上一段</span></button>
+          <div class="page-position"><span id="page-count" role="status">完整一组</span><span id="page-explanation"></span></div>
+          <button id="next-button" type="button" aria-label="下一段"><span id="next-label">下一段</span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10 6 6 6-6 6"/></svg></button>
+        </nav>
+        <div class="page-source-status"><span id="content-type" class="content-attribution"></span><p id="language-reading-status" class="language-reading-status" role="status"></p><p id="progress-label" class="progress-label"></p></div>
+      </footer>
+      <div class="visually-hidden"><span id="footer-total">20</span><span id="random-total">20</span><button id="back-top" type="button">回到段首</button></div>
+    </article>
+  </main>
+
+  <aside id="detail-panel" class="detail-panel" aria-label="阅读资料" hidden>
+    <div class="panel-header"><div><p id="panel-context">阅读单元 01</p><h2 id="panel-title">书中注释</h2></div><button id="panel-close" class="icon-button" type="button" aria-label="关闭资料，回到原段"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"/></svg></button></div>
+    <div id="panel-content" class="panel-content"></div>
+  </aside>
+  <dialog id="artwork-dialog" class="artwork-dialog" aria-labelledby="artwork-title" aria-describedby="artwork-status">
+    <div class="artwork-header"><span>原画相遇</span><button id="artwork-close" class="text-button" type="button">关闭画页 · Esc</button></div>
+    <div class="artwork-layout">
+      <figure id="artwork-figure" class="artwork-figure" hidden><div id="artwork-image" aria-hidden="true"></div><figcaption id="artwork-caption"></figcaption></figure>
+      <section class="artwork-copy">
+        <h2 id="artwork-title">遇见一页原画</h2><p id="artwork-chapter" class="artwork-chapter"></p>
+        <p id="artwork-status" class="artwork-status" role="status" aria-live="polite">正在准备本地原画…</p>
+        <p id="artwork-pool" class="artwork-pool"></p>
+        <p id="artwork-notice" class="artwork-notice" role="status" hidden></p>
+        <button id="artwork-reload" class="text-button" type="button" hidden>重新读取原画记录</button>
+        <div class="artwork-actions"><button id="artwork-read" class="primary-button" type="button" disabled>读到书中此处</button><button id="artwork-draw" class="small-button" type="button" disabled>再抽一页</button><button id="artwork-retry" class="small-button" type="button" hidden>重试这张原画</button></div>
+        <div id="artwork-guide" class="artwork-guide" aria-label="原画导读"></div>
+        <label for="artwork-target" class="artwork-target-label">阅读位置</label><select id="artwork-target" aria-describedby="artwork-relation"></select><p id="artwork-relation" class="artwork-relation"></p>
+        <details class="artwork-history-details"><summary>相遇记录</summary><p>仅保存最近100次相遇。回看不会重新抽取。</p><ol id="artwork-history"></ol></details>
+        <button id="artwork-text" class="text-button" type="button">关闭画页，再遇一段</button>
+        <details id="artwork-diagnostic" class="artwork-diagnostic" hidden></details>
+      </section>
+    </div>
+  </dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+</body>
+</html>

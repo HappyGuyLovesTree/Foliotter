@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#a32b22">
+  <meta name="description" content="书獭 Foliotter：导入自己的 EPUB，在本机阅读、收藏和记笔记。">
+  <title>书獭 Foliotter · 我的书库</title>
+  <link rel="icon" type="image/svg+xml" href="/redbook.svg">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/library.css">
+  <script src="/library.js" defer></script>
+</head>
+<body class="library-page">
+  <a class="skip-link" href="#library-main">跳到书库</a>
+  <div class="library-layout">
+    <header class="library-cover">
+      <a class="library-brand" href="/library.html" aria-label="书獭 Foliotter 书库"><span>书獭</span><span lang="en">Foliotter</span></a>
+      <div class="library-intro">
+        <svg class="library-mark" viewBox="0 0 160 120" fill="none" aria-hidden="true"><path d="M20 26h44l16 10 16-10h44v66H96l-16 10-16-10H20V26Z"/><path d="M80 36v66M35 42h25M35 55h25M35 68h25M100 42h25M100 55h25M100 68h25"/></svg>
+        <h1>抱着一本书，<br>漂一会儿。</h1>
+        <p>把自己的电子书带来。<br>读一段，留一句，再继续。</p>
+      </div>
+      <p class="library-local-note">无需账户。书留在本机，<br>阅读记录留在此浏览器。</p>
+    </header>
+    <main id="library-main" class="library-main" tabindex="-1">
+      <section class="library-import" aria-labelledby="import-title">
+        <h2 id="import-title">带一本书进来</h2>
+        <p id="import-help">选择你有权使用的无 DRM EPUB，最大 60 MiB。文件仅由本机服务解析，不会上传到互联网。</p>
+        <form id="epub-import-form">
+          <label for="epub-file" class="library-file-label">选择 EPUB 电子书</label>
+          <input id="epub-file" name="epub" type="file" accept=".epub,application/epub+zip" aria-describedby="import-help file-details">
+          <p id="file-details" class="file-details">支持 EPUB 2 / 3 的文字与常见图片；不支持 PDF、MOBI 或加密电子书。</p>
+          <button id="import-button" class="primary-button" type="submit" disabled>导入并开始阅读 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h16m-6-6 6 6-6 6"/></svg></button>
+        </form>
+        <div id="import-feedback" class="import-feedback" role="status" aria-live="polite" hidden><progress id="import-progress" aria-label="正在本机处理电子书" hidden></progress><p id="import-status"></p></div>
+        <details class="import-support"><summary>哪些内容可以导入？</summary><p>适合文字型 EPUB 2 / 3。提取章节、文字和 PNG、JPEG、GIF、WebP 图片，使用书獭的阅读版式；不会加载原书字体、网页脚本或外部资源。</p><p>加密或 DRM 文件、固定版式、SVG、音视频与交互内容不支持。包含加密字体或特殊 XML 声明的文件也可能无法导入；失败时会说明原因，不会改动原文件。</p></details>
+      </section>
+      <section class="library-shelf" aria-labelledby="shelf-title">
+        <div class="shelf-heading"><h2 id="shelf-title">我的书库 <span id="book-count"></span></h2><button id="library-refresh" class="text-button" type="button">刷新书库</button></div>
+        <p id="library-status" class="library-status" role="status">正在打开本机书库…</p>
+        <ul id="book-list" class="book-list" aria-label="已导入的电子书"></ul>
+        <div id="library-empty" class="library-empty" hidden><h3>第一本，由你来选。</h3><p>导入后，你的书会留在这里。阅读位置、收藏与笔记按书分别保存。</p><button id="choose-first-book" class="text-button" type="button">选择我的第一本 EPUB</button></div>
+        <a id="legacy-book" class="legacy-book" href="/" hidden><span><strong>已有的本机阅读资料</strong><small>继续阅读原来的书，保留原有笔记与进度</small></span><span aria-hidden="true">→</span></a>
+      </section>
+      <footer class="library-footer"><span>Foliotter · 书獭</span><span>开源阅读器 · 书籍由你提供</span></footer>
+    </main>
+  </div>
+</body>
+</html>

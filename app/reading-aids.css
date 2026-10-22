@@ -1,0 +1,39 @@
+/* Reading aids extend the existing paper reading surface. */
+.aid-entry{color:var(--red);min-height:44px;text-decoration:underline;text-underline-offset:5px}
+.aid-term{display:inline;font:inherit;line-height:inherit;color:inherit;letter-spacing:inherit;text-align:inherit;vertical-align:baseline;margin:0;padding:0;border:0;border-radius:0;background:none;text-decoration-line:underline;text-decoration-style:dashed;text-decoration-color:var(--red);text-decoration-thickness:1px;text-underline-offset:.2em;white-space:inherit}
+.aid-term:hover{color:var(--red)}
+.aid-term:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.aid-action,.aid-list-term,.aid-note-links button{display:block;min-height:44px;max-width:100%;padding:11px 0;text-align:left;color:var(--red);font:inherit;line-height:1.6;overflow-wrap:anywhere}
+.aid-action:hover,.aid-list-term:hover,.aid-note-links button:hover{text-decoration:underline;text-underline-offset:4px}
+.aid-word-list,.aid-note-links{padding:0 0 25px;margin:0 0 30px;border-bottom:1px solid var(--rule)}
+.aid-word-list h3,.aid-note-links h3,.aid-context>h3{font:500 23px/1.5 var(--book);margin:28px 0 12px}
+.aid-intro,.aid-state,.aid-position,.aid-coverage,.aid-review{font:13px/1.85 var(--ui);color:var(--muted);margin:12px 0}
+.aid-list-term{width:100%;border-bottom:1px solid var(--rule)}
+.aid-coverage{margin-top:22px}
+.aid-chapter-notes{margin-top:18px}.aid-chapter-notes summary{cursor:pointer;min-height:44px;padding:10px 0;line-height:1.6;overflow-wrap:anywhere}
+.aid-definition h3{font:500 32px/1.5 var(--book);margin:26px 0 12px;overflow-wrap:anywhere}
+.aid-short{font:20px/1.9 var(--book);white-space:pre-wrap;overflow-wrap:anywhere}
+.aid-relation,.aid-unit-label,.aid-boundary{font:13px/1.8 var(--ui);color:var(--red)}
+.aid-context-unit{padding:22px 0 20px;border-top:1px solid var(--rule);min-width:0}
+.aid-context-unit[aria-current=true]>.aid-unit-label{font-weight:700}
+.aid-book-text{font-size:20px;line-height:1.9;max-width:100%;overflow-wrap:anywhere}
+.aid-book-text.english-text{font-size:20px;line-height:1.75}
+.aid-book-text h3{font-size:23px}
+.aid-context .source-table{min-width:540px}.aid-context .table-scroll{overscroll-behavior:contain}
+.aid-context .book-image figcaption{line-height:1.8}
+.aid-context .source-image{max-height:60dvh}
+.detail-panel:has(.aid-context) .panel-content{scrollbar-gutter:stable}
+@media(max-width:760px){.aid-book-text,.aid-book-text.english-text{font-size:20px}.aid-entry{padding:9px 0}.aid-context-unit{padding-top:18px}}
+
+.aid-scope{margin-top:20px}.aid-scope summary{min-height:44px;padding:11px 0;cursor:pointer;font:13px/1.7 var(--ui)}.aid-scope-row{font:13px/1.8 var(--ui);color:var(--muted);margin:8px 0}
+.aid-dictionary-open{display:block;margin:22px 0 12px;padding:13px 17px;min-height:44px;border:1px solid var(--red);color:var(--red);font:500 15px/1.6 var(--ui);text-align:left}
+.panel-content>.aid-dictionary-title{font:500 28px/1.5 var(--book)}
+.aid-search-label{display:block;font:13px/1.6 var(--ui);margin:18px 0 8px;color:var(--muted)}
+.aid-dictionary-search,.aid-dictionary-language{display:block;width:100%;min-height:46px;padding:9px 12px;border:1px solid var(--rule);border-radius:0;background:transparent;color:var(--ink);font:16px/1.6 var(--ui)}
+.aid-dictionary-search:focus-visible,.aid-dictionary-language:focus-visible{outline:2px solid var(--red);outline-offset:3px}
+.aid-dictionary-item{padding:19px 0;border-top:1px solid var(--rule)}
+.aid-dictionary-term{display:block;min-height:44px;font:500 23px/1.5 var(--book);color:var(--red);text-align:left;overflow-wrap:anywhere}
+.aid-dictionary-item .aid-state{margin:4px 0}
+.aid-dictionary-excerpt{font:16px/1.9 var(--book);margin:8px 0;overflow-wrap:anywhere}
+.aid-occurrences{margin:24px 0;border-top:1px solid var(--rule)}
+.aid-occurrences summary{cursor:pointer;min-height:44px;padding:12px 0;color:var(--red);font:15px/1.8 var(--ui)}

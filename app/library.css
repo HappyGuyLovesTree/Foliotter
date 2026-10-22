@@ -1,0 +1,71 @@
+/* A practical first-book flow, in the reader's vermilion, ink and warm paper. */
+.library-page {min-height:100dvh;}
+.library-layout {display:grid;grid-template-columns:minmax(300px,34%) minmax(0,1fr);min-height:100dvh;}
+.library-cover {background:var(--red);color:var(--rail-text);padding:42px 48px;display:flex;flex-direction:column;justify-content:space-between;gap:64px;}
+.library-cover :focus-visible {outline-color:var(--rail-text);}
+.library-brand {display:flex;flex-wrap:wrap;align-items:baseline;gap:12px;color:inherit;text-decoration:none;width:fit-content;}
+.library-brand>span:first-child {font:600 30px/1.2 var(--book);}
+.library-brand>span:last-child {font:23px/1.2 var(--latin);}
+.library-mark {width:128px;height:96px;stroke:currentColor;stroke-width:1.5;margin-bottom:28px;}
+.library-intro h1 {font:500 42px/1.42 var(--book);letter-spacing:-.025em;margin:0 0 24px;text-wrap:balance;}
+.library-intro p {font:17px/1.9 var(--book);margin:0;color:#f8d7c4;}
+.library-local-note {font-size:12px;line-height:1.9;color:#f8d7c4;margin:0;}
+.library-main {padding:52px 7%;min-width:0;outline:none;}
+.library-main h2 {font:600 27px/1.35 var(--book);margin:0 0 14px;}
+.library-import {max-width:760px;}
+#import-help {font-size:14px;line-height:1.85;color:var(--muted);max-width:46em;margin:0 0 28px;}
+.library-file-label {display:block;font-size:13px;font-weight:600;margin-bottom:10px;}
+#epub-file {display:block;width:100%;background:var(--paper-bright);padding:12px;font-size:13px;min-height:50px;}
+#epub-file::file-selector-button {background:var(--paper);color:var(--ink);border:1px solid var(--rule);padding:8px 12px;margin-right:14px;font:inherit;cursor:pointer;}
+#epub-file:disabled::file-selector-button {cursor:wait;}
+.file-details {font-size:12px;line-height:1.8;color:var(--muted);margin:10px 0 20px;overflow-wrap:anywhere;}
+#import-button {min-height:48px;justify-content:center;gap:22px;}
+#import-button:disabled {background:var(--ink);opacity:.48;}
+.import-feedback {margin:18px 0 0;font-size:13px;line-height:1.8;}
+.import-feedback p {margin:6px 0 0;overflow-wrap:anywhere;}
+.import-feedback.is-error {color:var(--red);}
+#import-progress {width:100%;height:4px;accent-color:var(--red);}
+.import-support {font-size:12px;line-height:1.85;color:var(--muted);margin-top:18px;}
+.import-support summary {cursor:pointer;min-height:32px;color:var(--red);}
+.import-support p {max-width:46em;margin:8px 0;}
+.library-shelf {margin-top:54px;border-top:1px solid var(--ink);padding-top:26px;max-width:760px;}
+.shelf-heading {display:flex;align-items:center;justify-content:space-between;gap:20px;}
+.shelf-heading h2 {margin:0;}
+#book-count {font:12px var(--ui);color:var(--muted);margin-left:10px;}
+#library-refresh {min-height:44px;white-space:nowrap;}
+.library-status {font-size:13px;color:var(--muted);margin:18px 0 0;line-height:1.8;}
+.library-status.is-error {color:var(--red);}
+.book-list {list-style:none;margin:20px 0 0;padding:0;}
+.book-list li {border-bottom:1px solid var(--rule);}
+.library-book {display:flex;align-items:center;gap:20px;padding:22px 0;color:var(--ink);text-decoration:none;min-height:100px;}
+.library-book:hover h3 {color:var(--red);text-decoration:underline;text-underline-offset:6px;}
+.book-spine {width:32px;height:48px;border:1px solid var(--red);border-inline-start-width:5px;flex:none;}
+.book-details {flex:1;min-width:0;}
+.book-details h3 {font:500 23px/1.45 var(--book);margin:0 0 6px;overflow-wrap:anywhere;}
+.book-details p {font-size:12px;line-height:1.8;color:var(--muted);margin:0;overflow-wrap:anywhere;}
+.book-open {color:var(--red);font-size:13px;white-space:nowrap;}
+.library-empty {padding:34px 0 10px;}
+.library-empty h3 {font:500 26px/1.5 var(--book);margin:0 0 10px;}
+.library-empty p {font-size:14px;line-height:1.85;color:var(--muted);max-width:36em;margin:0 0 10px;}
+.library-empty .text-button {min-height:44px;color:var(--red);text-decoration:underline;}
+.legacy-book {display:flex;align-items:center;justify-content:space-between;gap:20px;padding:22px 0;margin-top:20px;border-block:1px solid var(--rule);text-decoration:none;color:var(--ink);}
+.legacy-book strong {display:block;font-size:14px;font-weight:500;}
+.legacy-book small {display:block;font-size:12px;color:var(--muted);margin-top:5px;}
+.legacy-book:hover strong {color:var(--red);text-decoration:underline;}
+.library-footer {display:flex;flex-wrap:wrap;justify-content:space-between;gap:10px 20px;max-width:760px;margin-top:52px;color:var(--muted);font-size:11px;line-height:1.8;}
+@media(min-width:1500px){.library-cover{padding-inline:64px;}.library-main{padding-inline:10%;}}
+@media(max-width:1000px){.library-cover{padding:36px 28px;}.library-intro h1{font-size:34px;}.library-main{padding:40px 32px;}}
+@media(max-width:720px){
+  .library-layout{display:block;}
+  .library-cover{padding:25px 24px 30px;gap:30px;}
+  .library-brand>span:first-child{font-size:26px;}.library-brand>span:last-child{font-size:21px;}
+  .library-intro{position:relative;padding-right:75px;}
+  .library-intro h1{font-size:31px;margin-bottom:14px;}
+  .library-intro p{font-size:15px;}.library-mark{position:absolute;right:0;top:0;width:72px;height:54px;}
+  .library-local-note{display:none;}
+  .library-main{padding:32px 24px;}.library-main h2{font-size:25px;}
+  .library-shelf{margin-top:36px;padding-top:22px;}
+  .library-book{gap:14px;}.book-details h3{font-size:21px;}.book-open{font-size:12px;}
+  .library-footer{margin-top:36px;}
+}
+@media(max-width:380px){.library-cover,.library-main{padding-inline:18px;}.library-intro h1{font-size:28px;}.book-spine{display:none;}}
