@@ -9,7 +9,7 @@ import zipfile
 ROOT = Path(__file__).resolve().parents[1]
 CODE_NAMES = ['README.md', 'NOTICE.md', 'LICENSE', 'THIRD_PARTY_NOTICES.md',
               'SECURITY.md', 'CONTRIBUTING.md', 'VERSION', '.gitignore',
-              '安装桌面入口.command', '启动阅读.command', 'requirements-import.txt']
+              'Install Foliotter.command', 'Start Foliotter.command', 'requirements-import.txt']
 APP_NAMES = ['index.html', 'redbook.svg', 'artwork-guides.js', 'encounter-core.js',
              'encounter-fixture.js', 'encounter-qa.js', 'encounter.js', 'reader.js',
              'reading-aids.css', 'reading-aids.js', 'reading-alignment.js',

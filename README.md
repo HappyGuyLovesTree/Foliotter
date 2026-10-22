@@ -1,10 +1,10 @@
-# Foliotter · 书獭
+# Foliotter
 
 **Hold a book. Drift awhile.**
 
 A local ebook reader for EPUB, PDF, TXT, MOBI, AZW3 and FB2. Bring your own books; keep your reading on your computer.
 
-The interface starts in **English**. Choose **中文** in the language selector to switch the interface. This setting is separate from the language of your book.
+The interface starts in **English**. Choose **Chinese** in the language selector to switch the interface. This setting is separate from the language of your book.
 
 **This repository contains MIT-licensed software and original icons only.** It includes no books, translations, publisher notes or book artwork. Supply ebooks you have the right to use. The software license does not grant rights to redistribute a book; see [NOTICE](NOTICE.md).
 
@@ -21,7 +21,7 @@ Setup downloads the pinned import tools into this project's `.venv`. It download
 
 Open `http://127.0.0.1:8787/`, choose a file in the library, and select **Import and read**. A fresh installation opens the library automatically. Imported books stay in your library and can be reopened from the reading page.
 
-On macOS, double-click `启动阅读.command` to set up the import tools and launch the reader. For a desktop shortcut and background service, use `安装桌面入口.command`. A new installation creates `Foliotter.app`. Keep the extracted folder in its installed location. Existing local installations retain their shortcut and browser address.
+On macOS, double-click `Start Foliotter.command` to set up the import tools and launch the reader. For a desktop shortcut and background service, use `Install Foliotter.command`. A new installation creates `Foliotter.app`. Keep the extracted folder in its installed location. Existing local installations retain their shortcut and browser address.
 
 If port 8787 is already occupied, use `python3 -B scripts/serve.py --port 8788 --open`. Browser records belong to their address: export them before changing ports. The server listens on the local computer only; do not expose it to the public Internet.
 
@@ -75,12 +75,6 @@ On Windows, the environment interpreter is `.venv\Scripts\python.exe`. Tests gen
 `--personal` is a legacy packaging option that includes private reading material. **Never upload its result to GitHub or a Release.** It does not include the new library and is not a general backup. Use the default code-only package for public releases.
 
 The optional icon build script uses Node.js, sharp and macOS iconutil. Reading does not require Node.js or rebuilding icons. Historical internal `redbook` identifiers remain to preserve existing local records and desktop installations.
-
-## 中文说明
-
-书獭支持本机导入 EPUB、PDF、TXT、MOBI、AZW3、FB2，默认英文界面，可在语言选项中切换中文。正文优先英文；单语书按原语言铺满阅读区，不留空栏。有真实对应译文时可开启另一语言对照，不自动翻译，也不把两本书按段号硬配对。
-
-首次运行上面的安装和启动命令；macOS 也可双击启动文件。每个文件最大 60 MiB，须无 DRM。PDF 需要可提取的文字，扫描版不提供 OCR。书和笔记都留在本机，但分别保存在书库目录和浏览器中，备份时两者都要保存。
 
 ## License
 

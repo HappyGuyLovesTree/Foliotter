@@ -123,7 +123,7 @@ class ReadFailure(Exception):
 def read_public_source(url, source=None, force=False):
     catalog = source_catalog()
     if not allowed_url(url, catalog):
-        raise ReadFailure('来源不在已确认的公开域名范围')
+        raise ReadFailure('The source is outside the approved public domains.')
     key = canonical_url(url)
     with LOCK:
         cached = READ_MEMORY.get(key)
@@ -148,14 +148,14 @@ def read_public_source(url, source=None, force=False):
                 raw = result.stdout.strip()
                 # A permission wall is a stop, not permission to try another route.
                 if len(raw) < 5000 and re.search(r'captcha|verify (you are|that you are) human|access denied|sign in to continue|subscribe to continue|just a moment', raw, re.I):
-                    raise ReadFailure('来源出现验证码、访问限制或登录墙，已停止读取')
+                    raise ReadFailure('The source requires a CAPTCHA, permission or sign-in. Reading stopped.')
                 candidate = clean_article(raw, source)
                 if result.returncode == 0 and len(candidate) > 700 and not re.search(r'IntenseDebate account|Navigation failed', candidate[:400]):
                     body, channel = candidate, 'Lightpanda'
                 else:
-                    attempts.append('Lightpanda未返回有效文章正文')
+                    attempts.append('Lightpanda did not return a valid article body.')
             except (subprocess.TimeoutExpired, OSError):
-                attempts.append('Lightpanda网络或超时')
+                attempts.append('Lightpanda encountered a network error or timeout.')
         if not body:
             cli = shutil.which('tvly') or str(Path.home() / '.local/bin/tvly')
             try:
@@ -163,15 +163,15 @@ def read_public_source(url, source=None, force=False):
                 answer = json.loads(result.stdout)
                 items = answer.get('results', [])
                 if not items:
-                    raise ReadFailure('公开正文读取失败；搜索摘要不能替代正文')
+                    raise ReadFailure('The public article could not be read. Search snippets cannot replace the source body.')
                 body = clean_article(str(items[0].get('raw_content', '')), source)
                 channel = 'Tavily extract (public body)'
                 if len(body) < 700:
-                    raise ReadFailure('正文不足，未升级为解读')
+                    raise ReadFailure('The article body is insufficient for a verified interpretation.')
                 if len(body) < 5000 and re.search(r'captcha|access denied|sign in to continue|subscribe to continue', body, re.I):
-                    raise ReadFailure('来源存在访问限制，已停止读取')
+                    raise ReadFailure('The source has access restrictions. Reading stopped.')
             except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
-                raise ReadFailure('公开正文读取超时或返回无效内容') from exc
+                raise ReadFailure('Reading the public article timed out or returned invalid content.') from exc
         value = {'url': key, 'body': body, 'bodyHash': digest(body), 'normalizedBodyHash': digest(normalize(body)), 'readAt': stamp(), 'method': channel, 'bodyLength': len(body), 'attempts': attempts, 'retrievalMode': 'network'}
         with LOCK:
             READ_MEMORY[key] = {'at': time.monotonic(), 'value': value}
@@ -216,8 +216,8 @@ def make_card(source, viewpoint, match, verified_at=None, read=None):
         'match': {'zh': match['zh'], 'en': match['en'], 'locator': match.get('locator') or viewpoint.get('locator', '')},
         'evidence': {'excerpt': viewpoint.get('excerpt', ''), 'locator': viewpoint.get('locator', ''),
                      'method': (read or {}).get('method') or proof.get('method')},
-        'verification': {'method': '已读公开正文，核对作者署名、观点与段落位置；双语为应用转述',
-                         'review': source.get('review', '独立模型代理复核；非人类专家审校'),
+        'verification': {'method': 'The public article was read and its byline, viewpoint and passage location checked. Both languages are app-assisted paraphrases.',
+                         'review': source.get('review', 'Reviewed by an independent model, not a human expert.'),
                          'identityCheckedAt': source['author'].get('verifiedAt', proof.get('verifiedAt'))},
         'cached': True,
     }
@@ -281,7 +281,7 @@ def run_scheduled(args):
         with LOCK:
             EXECUTING.discard(key)
             if JOBS[key].get('running'):
-                JOBS[key].update(running=False, phase='failed', message='后台更新未完整结束，保留已有材料。')
+                JOBS[key].update(running=False, phase='failed', message='The background update did not finish. Existing material has been kept.')
             if WAITING:
                 following = WAITING.pop(0)
                 start_scheduled(following)
@@ -291,12 +291,12 @@ def start_scheduled(args):
     """Called under LOCK; reserve execution before submitting to the executor."""
     key = args[4]
     EXECUTING.add(key)
-    JOBS[key].update(phase='starting', message='正在启动本次显式更新。')
+    JOBS[key].update(phase='starting', message='Starting the requested update.')
     try:
         POOL.submit(run_scheduled, args)
     except Exception:
         EXECUTING.discard(key)
-        JOBS[key].update(running=False, phase='failed', message='后台更新未能启动。')
+        JOBS[key].update(running=False, phase='failed', message='The background update could not start.')
 
 
 def unavailable_snapshot(unit, reason):
@@ -305,8 +305,8 @@ def unavailable_snapshot(unit, reason):
             'coverage': {'authorCount': 0, 'direct': 0, 'chapter': 0, 'theme': 0,
                          'gapZh': '尚无核实解读。', 'gapEn': 'No verified interpretation yet.'},
             'research': {'running': False, 'phase': 'not_configured'},
-            'notice': ('本单元尚未建立审核后的检索目标。正文可继续阅读。' if reason == 'target_missing'
-                       else '来源配置缺失，已停止联网更新。正文可继续阅读。')}
+            'notice': ('This passage has no reviewed search target. You can continue reading.' if reason == 'target_missing'
+                       else 'Source configuration is missing. Online updates are disabled; you can continue reading.')}
 
 
 def snapshot(unit, metadata, refresh=False, poll=False, dataset='active'):
@@ -337,14 +337,14 @@ def snapshot(unit, metadata, refresh=False, poll=False, dataset='active'):
             elif len(EXECUTING) >= 2 and len(WAITING) >= MAX_WAITING:
                 reason = 'queue_full'
             else:
-                JOBS[key] = {'running': True, 'phase': 'queued', 'updatedAt': stamp(), 'message': '已保留核实材料；等待更新。', 'unverifiedCandidateCount': 0}
+                JOBS[key] = {'running': True, 'phase': 'queued', 'updatedAt': stamp(), 'message': 'Verified material has been kept. Waiting to update.', 'unverifiedCandidateCount': 0}
                 # No book paragraphs or notes are carried into background work.
                 args = ({'id': unit['id']}, deepcopy(target), catalog, version, key, path, True)
                 if len(EXECUTING) < 2:
                     start_scheduled(args)
                 else:
                     WAITING.append(args)
-        job = deepcopy(JOBS.get(key) or stored.get('research') or {'running': False, 'phase': 'complete', 'message': '显示已核实材料。', 'unverifiedCandidateCount': 0})
+        job = deepcopy(JOBS.get(key) or stored.get('research') or {'running': False, 'phase': 'complete', 'message': 'Showing verified material.', 'unverifiedCandidateCount': 0})
         # A persisted running flag is not evidence of a job in this process.
         if key not in JOBS:
             job['running'] = False
@@ -352,12 +352,12 @@ def snapshot(unit, metadata, refresh=False, poll=False, dataset='active'):
     return {**identity, 'reason': reason, 'unitId': unit['id'], 'status': 'ready' if cards else ('error' if job['phase'] == 'failed' else 'empty'),
             'cached': bool(cards), 'results': cards, 'coverage': coverage(cards, target),
             'lastVerifiedAt': max(dates) if dates else None, 'research': job,
-            'notice': {'queue_full': '已有2个更新执行、2个等待；本次未排队，保留已有观点。',
-                       'cooldown': '上次更新尚未完成核验，请在5分钟冷却后重试；已有观点保留。',
-                       'cache_fresh': '显示24小时内的成功缓存，本次未发起联网。'}.get(reason,
-                       '只展示已读来源正文并核对后的作者观点。中英文均有明确转述标识。'),
+            'notice': {'queue_full': 'Two updates are running and two are queued. This request was not queued; existing views have been kept.',
+                       'cooldown': 'The previous update is not fully verified. Retry after the five-minute cooldown; existing views have been kept.',
+                       'cache_fresh': 'Showing a successful cache from the last 24 hours. No online request was made.'}.get(reason,
+                       'Only views checked against the source article are shown. Chinese and English summaries are labeled as paraphrases.'),
             'nextPollMs': 1800 if job.get('running') else None, 'sourceVersion': version, 'unitTextHash': target['textHash'],
-            'cacheScope': '版本＋完整单元指纹＋来源证据；各单元独立核验',
+            'cacheScope': 'Edition, complete passage fingerprint and source evidence; each passage is verified independently.',
             'query': target['query'], 'refreshedAt': stored.get('refreshedAt')}
 
 
@@ -389,10 +389,10 @@ def refresh_seed(source, unit_id, read):
     proof = source.get('readEvidence', {})
     unchanged = proof.get('normalizedBodyHash') == read.get('normalizedBodyHash') if proof.get('normalizedBodyHash') else proof.get('bodyHash') == read['bodyHash']
     if not unchanged:
-        return [], '来源正文指纹与已核验版本不同，需语义复核；不能仅凭短引延长核验时间'
+        return [], 'The source body fingerprint differs from the verified version. A semantic review is required; a short quotation alone cannot renew verification.'
     required = source.get('requiredMarkers', [])
     if required and not all(normalize(marker) in normalized for marker in required):
-        return [], '来源署名或正文标记变化，需要重新核对'
+        return [], 'The source byline or body markers changed and require another review.'
     cards = []
     for v in source.get('viewpoints', []):
         matching = [m for m in v.get('matches', []) if m['unitId'] == unit_id]
@@ -403,7 +403,7 @@ def refresh_seed(source, unit_id, read):
             continue
         for m in matching:
             cards.append(make_card(source, v, m, read['readAt'], read))
-    return cards, '' if cards else '旧证据定位未在本次公开正文中确认；保留原核验时间'
+    return cards, '' if cards else 'The previous evidence location was not confirmed in the current article. The original verification time has been kept.'
 
 
 def model_context(body, target, viewpoint=None):
@@ -451,10 +451,10 @@ def dynamic_source_record(candidate, read, analyzed, unit_id):
     source_id = 'online-' + digest(candidate['url'])[:16]
     source = {'id': source_id, 'url': candidate['url'], 'title': analyzed['title'],
               'author': {'id': author_id, 'name': analyzed['authorName'], 'kind': 'reader',
-                         'identity': '来源正文署名作者；专业资格未独立核实', 'identityUrl': candidate['url'], 'verifiedAt': read['readAt']},
+                         'identity': 'Author named in the source article; professional credentials have not been independently verified.', 'identityUrl': candidate['url'], 'verifiedAt': read['readAt']},
               'publishedAt': analyzed.get('publishedAt'), 'originalLanguage': 'en',
               'readEvidence': {k: read[k] for k in ('bodyHash', 'method', 'bodyLength')} | {'verifiedAt': read['readAt']},
-              'review': '本机模型进行来源归属、相关性与双语忠实性两阶段检查；非人类专家审校',
+              'review': 'Two model stages check source attribution, relevance and bilingual fidelity through the local service; this is not a human expert review.',
               'viewpoints': [{'id': 'view', 'zh': analyzed['summaryZh'], 'en': analyzed['summaryEn'],
                               'excerpt': analyzed['evidenceExcerpt'], 'locator': analyzed['locator'],
                               'anchors': [analyzed['anchor']],
@@ -475,20 +475,20 @@ def research(unit, target, catalog, version, key, path, force):
                            'unitTextHash': target['textHash'], 'results': cards,
                            'events': events, 'attemptedEpoch': time.time(),
                            'research': {'running': False, 'phase': 'partial',
-                                        'message': '显示已保存材料；上一轮尚无完整核验结果。',
+                                        'message': 'Showing saved material. The previous update has no complete verification result.',
                                         'updatedAt': stamp(), 'unverifiedCandidateCount': 0}})
     confirmed = 0
     network_urls = set()
     search_ok = False
     try:
-        progress(key, 'searching', '按当前单元的具体问题搜索公开来源。')
+        progress(key, 'searching', 'Searching public sources for the current passage topic.')
         try:
             discoveries, search_evidence = search_candidates(target['query'], catalog)
             events.append({'stage': 'search', **search_evidence})
             checkpoint()
             search_ok = True
         except (OSError, ValueError, subprocess.TimeoutExpired):
-            errors.append('本次搜索失败；继续尝试已有来源的公开正文。')
+            errors.append('The search failed. Trying the public articles of known sources.')
         seed_sources = [s for s in catalog if any(m['unitId'] == unit['id'] for v in s.get('viewpoints', []) for m in v.get('matches', []))]
         known = {canonical_url(s['url']): s for s in catalog}
         by_id = {s['id']: s for s in catalog}
@@ -511,11 +511,11 @@ def research(unit, target, catalog, version, key, path, force):
                 unverified += 1
                 deferred += 1
                 continue
-            progress(key, 'reading', '正在读取来源正文：' + candidate['title'], unverifiedCandidateCount=unverified)
+            progress(key, 'reading', 'Reading the source article: ' + candidate['title'], unverifiedCandidateCount=unverified)
             try:
                 read = read_public_source(candidate['url'], source, force=force)
             except ReadFailure as exc:
-                errors.append(candidate['url'] + '：' + str(exc))
+                errors.append(candidate['url'] + ': ' + str(exc))
                 events.append({'stage': 'read', 'url': candidate['url'], 'ok': False, 'reason': str(exc), 'at': stamp()})
                 unverified += 1
                 continue
@@ -523,15 +523,15 @@ def research(unit, target, catalog, version, key, path, force):
                 network_urls.add(canonical_url(candidate['url']))
             events.append({'stage': 'read', 'url': candidate['url'], 'ok': True, **{k: read[k] for k in ('bodyHash', 'readAt', 'method', 'bodyLength', 'retrievalMode')}})
             checkpoint()
-            progress(key, 'matching', '核对作者观点与本单元的位置和语境。')
+            progress(key, 'matching', 'Checking the author\'s viewpoint against this passage\'s location and context.')
             if relevant_seed:
                 refreshed, issue = refresh_seed(source, unit['id'], read)
-                if not refreshed and '指纹' in issue and model_sources >= MAX_MODEL_SOURCES:
+                if not refreshed and 'fingerprint' in issue and model_sources >= MAX_MODEL_SOURCES:
                     deferred += 1
-                    issue += '；本轮模型核验额度已用完，保留旧材料及其原核验时间'
-                elif not refreshed and '指纹' in issue:
+                    issue += '; The model review limit for this update has been reached. Previous material and its verification time have been kept.'
+                elif not refreshed and 'fingerprint' in issue:
                     from interpretation_model import analyze_source
-                    progress(key, 'checking', '来源内容变化，重新核对旧观点的归属、双语与本段关联。')
+                    progress(key, 'checking', 'The source changed. Rechecking attribution, bilingual fidelity and relevance of its previous viewpoint.')
                     for viewpoint in source['viewpoints']:
                         if not any(m['unitId'] == unit['id'] for m in viewpoint.get('matches', [])):
                             continue
@@ -570,15 +570,15 @@ def research(unit, target, catalog, version, key, path, force):
             model_sources += 1
             try:
                 from interpretation_model import analyze_source
-                progress(key, 'translating', '为新来源核对观点并生成有标识的中英转述。')
+                progress(key, 'translating', 'Checking the new source and preparing labeled Chinese and English paraphrases.')
                 prior_view = prior_source.get('viewpoints', [None])[0]
                 analyzed = analyze_source({**candidate, 'body': model_context(read['body'], target, prior_view), 'readAt': read['readAt']}, target, existing_viewpoint=prior_view)
-                progress(key, 'checking', '检查作者归属、双语忠实性和关联范围。')
+                progress(key, 'checking', 'Checking author attribution, bilingual fidelity and the scope of relevance.')
                 events.append({'stage': 'model', 'url': candidate['url'], 'accepted': bool(analyzed.get('accepted')), 'reason': analyzed.get('reason'), 'model': analyzed.get('model'), 'modelMetadata': analyzed.get('modelMetadata'), 'usage': analyzed.get('usage'), 'review': analyzed.get('review'), 'at': stamp()})
                 checkpoint()
                 if not analyzed.get('accepted'):
                     if str(analyzed.get('reason', '')).startswith(('model_', 'source_invalid', 'input_')):
-                        errors.append('新来源自动核验未完成：' + str(analyzed.get('reason')) + '；未生成已核实观点。')
+                        errors.append('Automatic verification of the new source is incomplete: ' + str(analyzed.get('reason')) + '; No verified viewpoint was generated.')
                     unverified += 1
                     continue
                 # A known author's page may be quoted by another writer. The model
@@ -593,7 +593,7 @@ def research(unit, target, catalog, version, key, path, force):
                     old_v = prior_source['viewpoints'][0]
                     if normalize(old_v['excerpt']) not in normalize(read['body']):
                         unverified += 1
-                        errors.append('来源旧证据发生变化，暂未扩展其单元覆盖。')
+                        errors.append('The source evidence changed. Its coverage has not been extended to another passage.')
                         continue
                     # New summary is not persisted as a second digest; use first only
                     # if its evidence is the same, otherwise leave a visible gap.
@@ -608,15 +608,15 @@ def research(unit, target, catalog, version, key, path, force):
                 confirmed += 1
                 checkpoint()
             except (ImportError, OSError, ValueError, subprocess.TimeoutExpired):
-                errors.append('新来源模型核验未完成；未将候选伪装成解读。')
+                errors.append('Model verification of the new source is incomplete. The candidate has not been presented as an interpretation.')
                 unverified += 1
         success = confirmed > 0
         phase = 'complete' if success else 'failed'
-        message = ('本次核对或复用' + str(confirmed) + '个作者来源；实际联网读取' + str(len(network_urls)) + '个页面。' if success else '本次在线核验未完成，保留此前已核实的材料及时间。')
+        message = (f'Checked or reused {confirmed} author sources; fetched {len(network_urls)} pages online.' if success else 'Online verification did not finish. Previously verified material and timestamps have been kept.')
         if errors:
-            message += ' 部分来源未完成；可展开查看状态。'
+            message += ' Some sources are incomplete; expand the update details to check their status.'
         if deferred:
-            message += ' 本轮仅对1个来源运行双阶段模型核验，其余保留待核对状态。'
+            message += ' Only one source received the two-stage model review in this update; the others remain pending.'
         progress(key, phase, message, running=False, unverifiedCandidateCount=unverified, errors=errors, onlineSourceCount=len(network_urls), verifiedSourceCount=confirmed,
                  searchCompleted=search_ok, modelSourceCount=model_sources, deferredSourceCount=deferred, elapsedSeconds=round(time.monotonic() - started, 2))
         with LOCK:
@@ -628,7 +628,7 @@ def research(unit, target, catalog, version, key, path, force):
         atomic_json(path, payload)
     except Exception as exc:
         # No provider stderr, credentials, source body or reasoning text in errors.
-        progress(key, 'failed', '后台核验未完成，保留已有材料。', running=False, errors=[type(exc).__name__])
+        progress(key, 'failed', 'Background verification did not finish. Existing material has been kept.', running=False, errors=[type(exc).__name__])
         with LOCK:
             status = deepcopy(JOBS[key])
         atomic_json(path, {**previous, 'unitId': unit['id'], 'sourceVersion': version,

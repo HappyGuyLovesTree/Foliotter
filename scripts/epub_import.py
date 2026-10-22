@@ -399,7 +399,7 @@ class EpubParser:
                     if image_id:
                         pending.append({'type': 'image', 'imageId': image_id, 'alt': clean(element.get('alt'))[:1000]})
                     elif element.get('alt'):
-                        pending.append({'type': 'text', 'text': f" [图片：{clean(element.get('alt'))}] "})
+                        pending.append({'type': 'text', 'text': f" [Image: {clean(element.get('alt'))}] "})
                 elif name == 'br':
                     pending.append({'type': 'text', 'text': '\n'})
                 else:

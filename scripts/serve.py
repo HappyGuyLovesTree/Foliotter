@@ -19,7 +19,7 @@ CANDIDATE = ROOT / 'data/fullbook-candidate'
 VERSION = (ROOT / 'VERSION').read_text(encoding='utf-8').strip()
 if not VERSION:
     raise ValueError('VERSION must not be empty')
-BUILD = '2026-10-22.formats-languages-1'
+BUILD = '2026-10-22.english-public-1'
 LIBRARY = ROOT / 'user-library'
 DATA_LOCK = threading.RLock()
 DATA_CACHE = {}
@@ -135,7 +135,7 @@ class ReaderHandler(SimpleHTTPRequestHandler):
             return
         parsed = urlparse(self.path)
         if parsed.path.startswith('/api/') and self.headers.get('Sec-Fetch-Site') == 'cross-site':
-            return self.json_response({'status': 'error', 'notice': '仅供本机阅读界面调用。'}, 403)
+            return self.json_response({'status': 'error', 'reason': 'invalid_origin', 'notice': '仅供本机阅读界面调用。'}, 403)
         if parsed.path == '/api/health':
             return self.json_response({'status': 'ok', 'appId': 'red-book-local-reader', 'mode': 'local-only', 'interpretationSchema': 'interpretations-3', 'version': VERSION, 'build': BUILD, 'time': stamp()})
         if parsed.path == '/api/library':
@@ -169,7 +169,7 @@ class ReaderHandler(SimpleHTTPRequestHandler):
                 return self.json_response({'dataset': dataset, 'status': 'unavailable', 'reason': 'source_missing', 'notice': '阅读数据暂不可用，未启动联网。', 'results': [], 'research': {'running': False, 'phase': 'not_configured'}}, 503)
             unit = units.get(qs.get('unit', [''])[0])
             if unit is None:
-                return self.json_response({'dataset': dataset, 'status': 'error', 'notice': '未找到这一阅读单元。', 'results': []}, 404)
+                return self.json_response({'dataset': dataset, 'status': 'error', 'reason': 'unit_not_found', 'notice': '未找到这一阅读单元。', 'results': []}, 404)
             try:
                 answer = interpretation_snapshot(unit, data.get('metadata', {}), qs.get('refresh') == ['1'], qs.get('poll') == ['1'], dataset=dataset)
             except ValueError:
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     parser.add_argument('--port', type=int, default=8787)
     parser.add_argument('--open', action='store_true', help='Open the local reader in the default browser')
     args = parser.parse_args()
-    print(f'Foliotter · 书獭：http://127.0.0.1:{args.port}', flush=True)
+    print(f'Foliotter: http://127.0.0.1:{args.port}', flush=True)
     server = ThreadingHTTPServer(('127.0.0.1', args.port), ReaderHandler)
     if args.open:
         webbrowser.open(f'http://127.0.0.1:{args.port}')

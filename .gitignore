@@ -9,8 +9,8 @@
 !/VERSION
 !/requirements-import.txt
 !/.gitignore
-!/安装桌面入口.command
-!/启动阅读.command
+!/Install Foliotter.command
+!/Start Foliotter.command
 !/app/
 /app/*
 !/app/index.html

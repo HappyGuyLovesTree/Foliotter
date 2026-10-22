@@ -83,7 +83,7 @@ def install():
     write(runtime / 'reader_background.py', (root / 'scripts/reader_background.py').read_bytes())
     plist = {'Label': label, 'ProgramArguments': [str(python), '-B', str(runtime / 'reader_background.py'), 'run'], 'RunAtLoad': True, 'KeepAlive': True, 'ThrottleInterval': 10, 'ExitTimeOut': 12, 'WorkingDirectory': str(runtime), 'ProcessType': 'Background', 'StandardOutPath': str(runtime / 'launchd.log'), 'StandardErrorPath': str(runtime / 'launchd.log')}
     write(agent, plistlib.dumps(plist), 0o644)
-    info = {'CFBundleName': 'Foliotter', 'CFBundleDisplayName': 'Foliotter · 书獭', 'CFBundleIdentifier': label + '.launcher', 'CFBundleExecutable': 'open-reader', 'CFBundlePackageType': 'APPL', 'CFBundleVersion': version, 'CFBundleShortVersionString': version, 'CFBundleIconFile': 'RedBook.icns', 'LSUIElement': True}
+    info = {'CFBundleName': 'Foliotter', 'CFBundleDisplayName': 'Foliotter', 'CFBundleIdentifier': label + '.launcher', 'CFBundleExecutable': 'open-reader', 'CFBundlePackageType': 'APPL', 'CFBundleVersion': version, 'CFBundleShortVersionString': version, 'CFBundleIconFile': 'RedBook.icns', 'LSUIElement': True}
     write(shortcut / 'Contents/Info.plist', plistlib.dumps(info), 0o644)
     write(shortcut / 'Contents/Resources/RedBook.icns', icon.read_bytes(), 0o644)
     launcher = '#!/bin/zsh\nexec ' + shlex.quote(str(python)) + ' -B ' + shlex.quote(str(runtime / 'reader_background.py')) + ' open\n'

@@ -88,6 +88,13 @@ class ImportTests(unittest.TestCase):
         self.assertEqual(files, {p.relative_to(self.root): (p.read_bytes(), p.stat().st_mtime_ns) for p in self.root.rglob('*') if p.is_file()})
         self.assertEqual(1, len(list_books(self.root)))
 
+    def test_unsupported_image_marker_preserves_original_alt_text(self):
+        body = '<html><body><p>Window<img src="missing.svg" alt="原图说明 / original description"/></p></body></html>'
+        _, data = self.imported(make_epub(body=body))
+        texts = [p['text'] for u in data['units'] for p in u['en']]
+        self.assertEqual('Window [Image: 原图说明 / original description]', texts[0])
+        self.assertEqual({}, data['imagesById'])
+
     def test_other_book_is_separate(self):
         one, _ = self.imported()
         two, _ = self.imported(make_epub(language='zh-CN'))
@@ -307,6 +314,22 @@ class HttpTests(unittest.TestCase):
         self.assertEqual(400, status)
         self.assertEqual('invalid_epub', json.loads(payload)['reason'])
         self.assertEqual([], json.loads(self.request('GET', '/api/library')[1])['books'])
+
+    def test_related_errors_default_to_english_without_starting_research(self):
+        with patch.object(serve, 'reading_data', side_effect=OSError('synthetic missing data')):
+            status, payload = self.request('GET', '/api/related?unit=missing')
+            self.assertEqual(503, status)
+            self.assertEqual('Reading data is unavailable. No online research was started.', json.loads(payload)['notice'])
+            _, translated = self.request('GET', '/api/related?unit=missing', headers={'X-UI-Language': 'zh'})
+            self.assertNotEqual(json.loads(payload)['notice'], json.loads(translated)['notice'])
+        with patch.object(serve, 'reading_data', return_value=({'metadata': {}}, {})):
+            status, payload = self.request('GET', '/api/related?unit=missing')
+            self.assertEqual(404, status)
+            self.assertEqual('This reading passage was not found.', json.loads(payload)['notice'])
+        with patch.object(serve, 'reading_data', return_value=({'metadata': {}}, {'unit': {'id': 'unit'}})), patch.object(serve, 'interpretation_snapshot', side_effect=ValueError('synthetic mismatch')):
+            status, payload = self.request('GET', '/api/related?unit=unit')
+            self.assertEqual(409, status)
+            self.assertIn('fingerprint changed', json.loads(payload)['notice'])
 
 
 if __name__ == '__main__':

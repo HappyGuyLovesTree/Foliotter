@@ -27,6 +27,19 @@ ORIGINAL_ICON_SHA256 = {
 }
 MAX_PUBLIC_FILE_BYTES = 2 * 1024 * 1024
 MAX_ZIP_BYTES = 16 * 1024 * 1024
+# Previous public releases used localized launcher names. Only their already
+# reviewed bytes remain allowed in history; new packages use English filenames.
+HISTORICAL_LAUNCHER_SHA256 = {
+    '\u542f\u52a8\u9605\u8bfb.command': {
+        '0508a5776bd0f7eb46ab9e1a036ab1068e3b696521e9ceeb8e9e2165bb068b43',
+        '5a71eaa291b57f39e95f5034148c6afba9ebebd836c1bac88b3931e140e20b5c',
+    },
+    '\u5b89\u88c5\u684c\u9762\u5165\u53e3.command': {
+        '5b444b979a7be22193e205743ca2ffbe7a7aa03ac673594514db4c66d1d4942d',
+        'c2d401d4da986991a488c95de7b21830c8a27009fd9f457c953b8c1f1c86c257',
+    },
+}
+CJK_TEXT = re.compile(r'[\u3400-\u9fff]')
 # Construct synthetic test values from parts so tests do not look like secrets.
 PATTERNS = (
     ('credential', re.compile(r'\b(?:gh[pousr]_[A-Za-z0-9]{25,}|github_pat_[A-Za-z0-9_]{30,}|sk-(?:proj-)?[A-Za-z0-9_-]{25,}|AKIA[0-9A-Z]{16})\b')),
@@ -54,8 +67,11 @@ def allowed_path(name):
 def scan_file(name, raw, scope, object_id=None):
     """Check exact candidate bytes without printing their contents."""
     findings = []
-    if not allowed_path(name):
+    reviewed_history = scope == 'git-history' and hashlib.sha256(raw).hexdigest() in HISTORICAL_LAUNCHER_SHA256.get(name, ())
+    if not allowed_path(name) and not reviewed_history:
         findings.append(issue(scope, name, 'not-public-allowlist', object_id=object_id))
+    if scope != 'git-history' and not name.isascii():
+        findings.append(issue(scope, name, 'non-english-public-filename', object_id=object_id))
     if len(raw) > MAX_PUBLIC_FILE_BYTES:
         findings.append(issue(scope, name, 'oversized-public-file', object_id=object_id))
     if name in ORIGINAL_ICON_SHA256 and hashlib.sha256(raw).hexdigest() != ORIGINAL_ICON_SHA256[name]:
@@ -71,6 +87,8 @@ def scan_file(name, raw, scope, object_id=None):
         findings.append(issue(scope, name, 'unexpected-binary-content', object_id=object_id))
         return findings
     for number, line in enumerate(text.splitlines(), 1):
+        if scope != 'git-history' and name.endswith('.md') and CJK_TEXT.search(line):
+            findings.append(issue(scope, name, 'non-english-public-documentation', number, object_id))
         for code, pattern in PATTERNS:
             if pattern.search(line):
                 findings.append(issue(scope, name, code, number, object_id))

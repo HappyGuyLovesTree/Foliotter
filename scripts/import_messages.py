@@ -56,6 +56,9 @@ EN = {
     'too_many_units': 'The book exceeds the 30,000 reading-unit limit.',
     'too_much_text': 'The book exceeds the 12-million-character limit.',
     'no_text': 'No readable text was found. Image-only books and OCR are not supported.',
+    'source_missing': 'Reading data is unavailable. No online research was started.',
+    'unit_not_found': 'This reading passage was not found.',
+    'fingerprint_mismatch': 'The reading edition or passage fingerprint changed. Commentary mappings need to be checked again.',
 }
 
 

@@ -5,6 +5,7 @@ import subprocess
 import tempfile
 import unittest
 import zipfile
+from unittest.mock import patch
 
 from audit_release import ORIGINAL_ICON_SHA256, audit_git, audit_worktree, audit_zip, scan_file
 from package_reader import build, code_paths
@@ -26,6 +27,22 @@ def git(root, *args):
 
 
 class ReleaseAuditTests(unittest.TestCase):
+    def test_current_public_documents_and_paths_are_english_but_translations_are_allowed(self):
+        localized = chr(0x4e2d) + chr(0x6587)
+        self.assertIn('non-english-public-documentation', {f['code'] for f in scan_file('README.md', localized.encode(), 'package')})
+        self.assertIn('non-english-public-filename', {f['code'] for f in scan_file(localized + '.command', b'fixture', 'git-index')})
+        self.assertEqual([], scan_file('app/i18n.js', localized.encode(), 'package'))
+        self.assertEqual([], scan_file('README.md', localized.encode(), 'git-history'))
+
+    def test_retired_launcher_exception_is_history_only_and_checks_exact_bytes(self):
+        import hashlib
+        name = chr(0x4e2d) + '.command'
+        reviewed = b'original reviewed launcher'
+        with patch('audit_release.HISTORICAL_LAUNCHER_SHA256', {name: {hashlib.sha256(reviewed).hexdigest()}}):
+            self.assertEqual([], scan_file(name, reviewed, 'git-history'))
+            self.assertTrue(scan_file(name, b'changed contents', 'git-history'))
+            self.assertTrue(scan_file(name, reviewed, 'git-index'))
+
     def test_gitignore_matches_the_public_allowlist_and_hides_imports(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

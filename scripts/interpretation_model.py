@@ -57,7 +57,7 @@ product pages, and general book reviews with no specific relevant interpretation
 Reject if authorship is uncertain, source evidence is insufficient, or unrelated.
 
 Return exactly one JSON object with these keys and no markdown:
-eligible (boolean), reason (brief Chinese paraphrase), authorName (string),
+eligible (boolean), reason (brief English explanation), authorName (string),
 authorEvidence (short exact source phrase identifying the page author, including
 their name from the byline, author heading or explicit author biography; never add
 the word 'By' if absent. A named profile/About link immediately below the article
@@ -67,8 +67,8 @@ relation (direct|chapter|theme|none), summaryZh (Chinese, <=85 characters),
 summaryEn (English, <=45 words), matchZh (Chinese, <=95 characters), matchEn
 (English, <=35 words), locator (short heading/location description, <=160 chars),
 evidenceExcerpt (exact source phrase, 2-12 English words; not a Jung/Drob quote),
-anchor (exactly the SAME string as evidenceExcerpt), evidenceSupport (short Chinese
-paraphrase explaining what the excerpt supports, <=160 characters).
+anchor (exactly the SAME string as evidenceExcerpt), evidenceSupport (short English
+explanation of what the excerpt supports, <=160 characters).
 
 The combined verbatim authorEvidence and evidenceExcerpt must be <=25 English
 words, with evidenceExcerpt <=12. Do not include additional source quotations in
@@ -118,7 +118,7 @@ source body, target keywords/location and proposal. Do not repair the proposal.
 
 Return exactly this JSON shape (booleans must be real JSON booleans):
 {"faithful":false,"authorOwnView":false,"bilingualFaithful":false,
-"relationSupported":false,"quoteFound":false,"reason":"简短中文理由"}
+"relationSupported":false,"quoteFound":false,"reason":"Brief English explanation"}
 
 faithful: the summaries and supporting claims are wholly supported by the source,
 with qualifications preserved and no invented interpretation/date/identity.
@@ -144,7 +144,7 @@ or expanded digest makes faithful=false; an unrelated old digest makes
 relationSupported=false. Do not reward manufacturing a new paragraph interpretation.
 Any unsupported component makes its flag false. Reject directory/tag/product/contents
 pages and generic book reviews. Date from URL or retrieval metadata is unsupported.
-Use a short Chinese paraphrase for reason, no quotations or detailed reasoning.
+Use a short English explanation for reason, no quotations or detailed reasoning.
 """
 
 

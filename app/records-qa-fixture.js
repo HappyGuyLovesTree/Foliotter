@@ -14,9 +14,9 @@
  const before=await fingerprint();let checks=[];
  function show(){report.textContent=JSON.stringify({formalBefore:before,checks},null,2);}
  function button(text,fn){const b=document.createElement('button');b.textContent=text;b.onclick=async()=>{try{await fn();}catch(e){checks.push({error:e.message});show();}};bar.append(b);}
- button('注入外部写入',async()=>{const s=JSON.parse(get.call(sessionStorage,'redbook.reader.v2'));s.notes['lp-002']='F001 external preserved';s.favorites.push('lp-002');set.call(sessionStorage,'redbook.reader.v2',JSON.stringify(s));checks.push({externalWrite:'synthetic direct out-of-band update'});show();});
- button('启用配额失败',async()=>{quota=true;checks.push({quota:true});show();});
- button('核验正式四键与会话',async()=>{const after=await fingerprint(),record=JSON.parse(get.call(sessionStorage,'redbook.reader.v2')||'null');checks.push({formalAfter:after,formalUnchanged:JSON.stringify(before)===JSON.stringify(after),sessionNoteIds:Object.keys(record?.notes||{}),sessionFavorites:record?.favorites||[],textarea:document.getElementById('personal-note')?.value,saveState:document.querySelector('.save-state')?.textContent,notice:document.getElementById('storage-notice')?.textContent,toast:document.getElementById('toast')?.textContent});show();});
+ button('Inject external write',async()=>{const s=JSON.parse(get.call(sessionStorage,'redbook.reader.v2'));s.notes['lp-002']='F001 external preserved';s.favorites.push('lp-002');set.call(sessionStorage,'redbook.reader.v2',JSON.stringify(s));checks.push({externalWrite:'synthetic direct out-of-band update'});show();});
+ button('Simulate quota failure',async()=>{quota=true;checks.push({quota:true});show();});
+ button('Check saved records and session',async()=>{const after=await fingerprint(),record=JSON.parse(get.call(sessionStorage,'redbook.reader.v2')||'null');checks.push({formalAfter:after,formalUnchanged:JSON.stringify(before)===JSON.stringify(after),sessionNoteIds:Object.keys(record?.notes||{}),sessionFavorites:record?.favorites||[],textarea:document.getElementById('personal-note')?.value,saveState:document.querySelector('.save-state')?.textContent,notice:document.getElementById('storage-notice')?.textContent,toast:document.getElementById('toast')?.textContent});show();});
  bar.append(report);document.body.prepend(bar);show();
  });
 })();

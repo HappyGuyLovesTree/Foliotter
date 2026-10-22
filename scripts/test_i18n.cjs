@@ -113,3 +113,37 @@ test('the localized file button opens the native input, preserves filenames and 
   assert.equal(app.get('choose-file-button').disabled,false);
   const html=read('library.html');assert.match(html,/<button id="choose-file-button" type="button" aria-describedby="import-help selected-file-name file-details"/);assert.match(html,/<input id="epub-file"[^>]+ hidden>/);
 });
+
+test('public HTML brands default to English and retain explicit Chinese translations',()=>{
+  const app=harness(),html=read('library.html');
+  const regions=[html.match(/<a class="library-brand"[\s\S]*?<\/a>/)[0],html.match(/<footer class="library-footer"[\s\S]*?<\/footer>/)[0]];
+  for(const region of regions){
+    assert.doesNotMatch(region.replace(/<[^>]*>/g,''),/[\u3400-\u9fff]/);
+    for(const [,en,zh] of region.matchAll(/<span[^>]*data-ui-en="([^"]*)" data-ui-zh="([^"]*)"[^>]*>/g)){
+      const node=app.document.createElement('span');node.setAttribute('data-ui-en',en);node.setAttribute('data-ui-zh',zh);
+      app.api.setLocale('en');app.api.apply(node);assert.equal(node.textContent,en);
+      app.api.setLocale('zh');app.api.apply(node);assert.equal(node.textContent,zh);
+    }
+  }
+  for(const name of ['index.html','library.html']){
+    const source=read(name);assert.match(source,/<html lang="en">/);
+    const chinese=source.replace(/<!--[\s\S]*?-->/g,'').replace(/<[^>]*>/g,'').match(/[\u3400-\u9fff]+/g)||[];
+    assert.ok(chinese.every(label=>label==='中文'),`${name}: unexpected default Chinese text`);
+  }
+  const css=read('styles.css');assert.match(css,/\.sequence summary:after\{content:'Expand'/);assert.match(css,/\.sequence\[open\] summary:after\{content:'Collapse'/);assert.match(css,/html:lang\(zh\) \.sequence summary:after\{content:'展开'/);
+  assert.doesNotMatch(read('records-qa-fixture.js'),/[\u3400-\u9fff]/);
+});
+
+test('artwork QA status checks work in either supported interface language',()=>{
+  const {matchesUiMessage}=require('../app/encounter-qa.js');
+  for(const [kind,en,zh] of [
+    ['unavailable','The artwork is unavailable. You can still read the text.','原画暂不可用，正文仍可阅读。'],
+    ['empty','No artwork is available. Close this view and discover a passage.','当前没有可用原画。可以关闭后再遇一段。'],
+    ['section','Chapter containing this image','此图所在章节'],
+    ['unsaved','This encounter was not saved and may be lost on reload.','本次相遇未保存，刷新可能丢失。'],
+    ['unsaved','The previous records are preserved; this encounter is unsaved.','本次相遇未保存，刷新可能丢失；旧记录已保留。'],
+    ['readonly','Read-only mode: this encounter is only kept for this session.','只读模式：本次相遇仅在会话中，刷新可能丢失。']
+  ]){assert.equal(matchesUiMessage(en,kind),true);assert.equal(matchesUiMessage(zh,kind),true);assert.equal(matchesUiMessage('Opening artwork…',kind),false);}
+  assert.equal(matchesUiMessage('Anything','unknown'),false);
+  assert.doesNotMatch(read('encounter-qa.js'),/\.includes\('[^']*[\u3400-\u9fff]/);
+});
